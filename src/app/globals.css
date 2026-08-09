@@ -29,8 +29,10 @@
   --radius-lg: 1.375rem;
   --shadow-soft: 0 1rem 3rem rgb(15 23 42 / 0.06);
 
+  --duration-instant: 90ms;
   --duration-fast: 180ms;
   --duration-ui: 280ms;
+  --ease-premium: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
 }
 

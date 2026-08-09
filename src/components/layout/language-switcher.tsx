@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 import type { Locale, LocaleSwitchRoute } from "@/domain/content/types";
 import {
@@ -14,7 +13,10 @@ import styles from "./language-switcher.module.css";
 interface LanguageSwitcherProps {
   currentLocale: Locale;
   label: string;
+  pathname: string;
   routes: readonly LocaleSwitchRoute[];
+  variant?: "compact" | "panel";
+  onNavigate?: () => void;
 }
 
 const localeLabels: Record<Locale, string> = {
@@ -56,12 +58,13 @@ function persistLocale(locale: Locale) {
 export function LanguageSwitcher({
   currentLocale,
   label,
+  pathname,
   routes,
+  variant = "compact",
+  onNavigate,
 }: LanguageSwitcherProps) {
-  const pathname = usePathname();
-
   return (
-    <nav className={styles.switcher} aria-label={label}>
+    <nav className={styles.switcher} aria-label={label} data-variant={variant}>
       {(["ar", "en"] as const).map((locale) => (
         <Link
           key={locale}
@@ -70,9 +73,12 @@ export function LanguageSwitcher({
           lang={locale}
           dir={locale === "ar" ? "rtl" : "ltr"}
           aria-current={locale === currentLocale ? "page" : undefined}
-          onClick={() => persistLocale(locale)}
+          onClick={() => {
+            persistLocale(locale);
+            onNavigate?.();
+          }}
         >
-          {localeLabels[locale]}
+          <span>{localeLabels[locale]}</span>
         </Link>
       ))}
     </nav>

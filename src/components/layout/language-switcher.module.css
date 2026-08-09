@@ -1,43 +1,72 @@
 .switcher {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0.2rem;
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 0.125rem;
+  padding: 0.1875rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--surface);
-}
-
-.switcher a {
-  min-height: 2.75rem;
-  padding-inline: 0.7rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: calc(var(--radius-sm) - 3px);
-  color: var(--text-secondary);
-  font-family: var(--font-en), var(--font-ar), sans-serif;
-  font-size: 0.8rem;
-  font-weight: 700;
-  transition: background-color var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
-}
-
-.switcher a[lang="ar"] {
-  font-family: var(--font-ar), var(--font-en), sans-serif;
-}
-
-.switcher a[aria-current="page"] {
-  color: var(--text-primary);
   background: var(--surface-soft);
 }
 
+.switcher a {
+  min-block-size: 2.375rem;
+  min-inline-size: 4.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: 0.4rem;
+  padding-inline: 0.65rem;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius-sm) - 3px);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform var(--duration-instant) var(--ease-premium);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgb(12 183 181 / 0.12);
+}
+
 .switcher a:hover {
-  color: var(--primary-dark);
+  color: var(--text-primary);
+}
+
+.switcher a:active {
+  transform: scale(0.975);
+}
+
+.switcher a[aria-current="page"] {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: 0 4px 12px -10px rgb(15 23 42 / 0.55);
+}
+
+.switcher[data-variant="panel"] {
+  inline-size: 100%;
+}
+
+.switcher[data-variant="panel"] a {
+  min-block-size: 3rem;
+  font-size: 0.82rem;
+}
+
+.switcher a:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .switcher a {
     transition-duration: 0.01ms;
+  }
+
+  .switcher a:active {
+    transform: none;
   }
 }

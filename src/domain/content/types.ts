@@ -46,6 +46,11 @@ export interface SiteSettingsTranslation {
   navigation: readonly NavigationItem[];
   skipToContentLabel: string;
   languageSwitcherLabel: string;
+  mobileMenuOpenLabel: string;
+  mobileMenuCloseLabel: string;
+  mobileMenuLabel: string;
+  mobileMenuTitle: string;
+  primaryCtaLabel: string;
   footerSummary: string;
   footerNavigationLabel: string;
   copyrightLabel: string;

@@ -1,13 +1,9 @@
-import Link from "next/link";
-
 import type {
   LocaleSwitchRoute,
   ResolvedSiteSettings,
 } from "@/domain/content/types";
 
-import { Container } from "../ui/container";
-import { LanguageSwitcher } from "./language-switcher";
-import styles from "./site-header.module.css";
+import { SiteHeaderClient } from "./site-header-client";
 
 interface SiteHeaderProps {
   settings: ResolvedSiteSettings;
@@ -15,31 +11,30 @@ interface SiteHeaderProps {
 }
 
 export function SiteHeader({ settings, routes }: SiteHeaderProps) {
+  const contactItem = settings.navigation.find((item) => item.key === "contact");
+
+  if (!contactItem) {
+    throw new Error("Site navigation requires a contact destination.");
+  }
+
   return (
-    <>
-      <a className={styles.skipLink} href="#main-content">
-        {settings.skipToContentLabel}
-      </a>
-      <header className={styles.header}>
-        <Container className={styles.inner}>
-          <Link className={styles.brand} href={`/${settings.locale}`}>
-            <span>{settings.brandName}</span>
-            <small>{settings.brandDescriptor}</small>
-          </Link>
-          <nav className={styles.navigation} aria-label={settings.navigationLabel}>
-            {settings.navigation.map((item) => (
-              <Link key={item.key} href={item.href}>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <LanguageSwitcher
-            currentLocale={settings.locale}
-            label={settings.languageSwitcherLabel}
-            routes={routes}
-          />
-        </Container>
-      </header>
-    </>
+    <SiteHeaderClient
+      locale={settings.locale}
+      brandName={settings.brandName}
+      brandDescriptor={settings.brandDescriptor}
+      navigationLabel={settings.navigationLabel}
+      navigation={settings.navigation.filter((item) => item.key !== "contact")}
+      skipToContentLabel={settings.skipToContentLabel}
+      languageSwitcherLabel={settings.languageSwitcherLabel}
+      mobileMenuOpenLabel={settings.mobileMenuOpenLabel}
+      mobileMenuCloseLabel={settings.mobileMenuCloseLabel}
+      mobileMenuLabel={settings.mobileMenuLabel}
+      mobileMenuTitle={settings.mobileMenuTitle}
+      primaryCta={{
+        href: contactItem.href,
+        label: settings.primaryCtaLabel,
+      }}
+      routes={routes}
+    />
   );
 }

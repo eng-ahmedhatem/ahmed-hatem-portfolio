@@ -22,6 +22,11 @@ export const mockSiteSettings: SiteSettings = {
       ],
       skipToContentLabel: "انتقل إلى المحتوى",
       languageSwitcherLabel: "اختيار اللغة",
+      mobileMenuOpenLabel: "افتح قائمة التنقل",
+      mobileMenuCloseLabel: "أغلق قائمة التنقل",
+      mobileMenuLabel: "القائمة",
+      mobileMenuTitle: "استكشف المنصة",
+      primaryCtaLabel: "ابدأ مشروعك",
       footerSummary:
         "منصة ثنائية اللغة لعرض بناء المنتجات الرقمية وربط الواجهات وأتمتة سير العمل.",
       footerNavigationLabel: "روابط التذييل",
@@ -44,6 +49,11 @@ export const mockSiteSettings: SiteSettings = {
       ],
       skipToContentLabel: "Skip to content",
       languageSwitcherLabel: "Choose language",
+      mobileMenuOpenLabel: "Open navigation menu",
+      mobileMenuCloseLabel: "Close navigation menu",
+      mobileMenuLabel: "Menu",
+      mobileMenuTitle: "Explore the platform",
+      primaryCtaLabel: "Start a project",
       footerSummary:
         "A bilingual platform for building digital products, connecting APIs, and automating business workflows.",
       footerNavigationLabel: "Footer navigation",
