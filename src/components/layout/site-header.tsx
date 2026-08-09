@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import type {
-  LocalizedRouteEntry,
+  LocaleSwitchRoute,
   ResolvedSiteSettings,
 } from "@/domain/content/types";
 
@@ -11,7 +11,7 @@ import styles from "./site-header.module.css";
 
 interface SiteHeaderProps {
   settings: ResolvedSiteSettings;
-  routes: readonly LocalizedRouteEntry[];
+  routes: readonly LocaleSwitchRoute[];
 }
 
 export function SiteHeader({ settings, routes }: SiteHeaderProps) {

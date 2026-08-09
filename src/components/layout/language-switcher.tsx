@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import type { Locale, LocalizedRouteEntry } from "@/domain/content/types";
+import type { Locale, LocaleSwitchRoute } from "@/domain/content/types";
 import {
   LOCALE_COOKIE_MAX_AGE,
   LOCALE_COOKIE_NAME,
@@ -14,7 +14,7 @@ import styles from "./language-switcher.module.css";
 interface LanguageSwitcherProps {
   currentLocale: Locale;
   label: string;
-  routes: readonly LocalizedRouteEntry[];
+  routes: readonly LocaleSwitchRoute[];
 }
 
 const localeLabels: Record<Locale, string> = {
@@ -37,7 +37,7 @@ function normalizePath(path: string): string {
 function getLocaleHref(
   pathname: string,
   targetLocale: Locale,
-  routes: readonly LocalizedRouteEntry[],
+  routes: readonly LocaleSwitchRoute[],
 ): string {
   const normalizedPath = normalizePath(pathname);
   const route = routes.find((entry) =>

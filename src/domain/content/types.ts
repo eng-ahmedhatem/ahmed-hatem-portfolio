@@ -260,3 +260,8 @@ export interface LocalizedRouteEntry {
   fallbackPaths: Record<Locale, string>;
   lastModified?: string;
 }
+
+export type LocaleSwitchRoute = Pick<
+  LocalizedRouteEntry,
+  "paths" | "fallbackPaths"
+>;

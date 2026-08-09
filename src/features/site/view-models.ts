@@ -4,7 +4,7 @@ import { contentRepository } from "@/data/content-repository";
 import type {
   ContentBlock,
   Locale,
-  LocalizedRouteEntry,
+  LocaleSwitchRoute,
   ResolvedSiteSettings,
   SeoMetadata,
   TranslationState,
@@ -28,7 +28,7 @@ export interface ContentRowViewModel {
 
 export interface SiteChromeViewModel {
   settings: ResolvedSiteSettings;
-  routes: readonly LocalizedRouteEntry[];
+  routes: readonly LocaleSwitchRoute[];
 }
 
 export const getSiteChromeViewModel = cache(
@@ -38,7 +38,13 @@ export const getSiteChromeViewModel = cache(
       contentRepository.getRouteManifest(),
     ]);
 
-    return { settings, routes };
+    return {
+      settings,
+      routes: routes.map(({ paths, fallbackPaths }) => ({
+        paths,
+        fallbackPaths,
+      })),
+    };
   },
 );
 
