@@ -1,0 +1,133 @@
+:root {
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --surface-soft: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --primary: #0cb7b5;
+  --primary-dark: #079a98;
+  --accent: #2563eb;
+  --border: #e2e8f0;
+
+  --container-max: 82.5rem;
+  --page-gutter: 2rem;
+  --section-space-sm: clamp(4.5rem, 8vw, 5.75rem);
+  --section-space-lg: clamp(7rem, 10vw, 9.25rem);
+
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: clamp(1.05rem, 1.5vw, 1.25rem);
+  --text-xl: clamp(1.35rem, 2.2vw, 1.8rem);
+  --text-display: clamp(2.35rem, 5.5vw, 5.25rem);
+  --leading-body: 1.75;
+  --leading-display: 1.04;
+  --tracking-display: -0.045em;
+
+  --radius-sm: 0.625rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.375rem;
+  --shadow-soft: 0 1rem 3rem rgb(15 23 42 / 0.06);
+
+  --duration-fast: 180ms;
+  --duration-ui: 280ms;
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  min-height: 100%;
+  color-scheme: light;
+  background: var(--background);
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: clip;
+  color: var(--text-primary);
+  background: var(--background);
+  font-family: var(--font-en), var(--font-ar), system-ui, sans-serif;
+  font-size: var(--text-base);
+  line-height: 1.5;
+  text-align: start;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html[lang="ar"] body {
+  --leading-body: 1.9;
+  --leading-display: 1.2;
+  --tracking-display: 0;
+  font-family: var(--font-ar), var(--font-en), system-ui, sans-serif;
+}
+
+body > div {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 72%, white);
+  outline-offset: 3px;
+}
+
+::selection {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--primary) 26%, white);
+}
+
+@media (max-width: 64rem) {
+  :root {
+    --page-gutter: 1.5rem;
+  }
+}
+
+@media (max-width: 30rem) {
+  :root {
+    --page-gutter: 1.125rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
