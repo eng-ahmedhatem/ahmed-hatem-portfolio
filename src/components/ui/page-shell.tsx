@@ -1,11 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 
+import { Reveal } from "@/components/motion/reveal";
 import type { ContentBlock } from "@/domain/content/types";
-import type {
-  ContentRowViewModel,
-  PageIntroViewModel,
-} from "@/features/site/view-models";
+import type { PageIntroViewModel } from "@/features/site/view-models";
 
 import { Container } from "./container";
 import { StructuredData } from "./structured-data";
@@ -23,41 +22,19 @@ export function PageShell({ intro, structuredData, children }: PageShellProps) {
       <StructuredData data={structuredData} />
       <Container>
         <header className={styles.intro}>
-          <p className={styles.eyebrow}>{intro.eyebrow}</p>
-          <h1>{intro.title}</h1>
-          <p className={styles.summary}>{intro.summary}</p>
+          <Reveal distance={14}>
+            <p className={styles.eyebrow}>{intro.eyebrow}</p>
+          </Reveal>
+          <Reveal delay={0.06} distance={22}>
+            <h1>{intro.title}</h1>
+          </Reveal>
+          <Reveal delay={0.12} distance={18}>
+            <p className={styles.summary}>{intro.summary}</p>
+          </Reveal>
         </header>
         {children ? <div className={styles.content}>{children}</div> : null}
       </Container>
     </main>
-  );
-}
-
-export function ContentRows({ rows }: { rows: readonly ContentRowViewModel[] }) {
-  if (rows.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className={styles.rows}>
-      {rows.map((row) => (
-        <article className={styles.row} key={row.id}>
-          <div>
-            <h2>
-              <Link href={row.href}>{row.title}</Link>
-            </h2>
-            <p>{row.summary}</p>
-          </div>
-          {row.meta?.length ? (
-            <ul className={styles.meta} aria-label={row.title}>
-              {row.meta.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          ) : null}
-        </article>
-      ))}
-    </div>
   );
 }
 
@@ -74,20 +51,21 @@ export function ArticleBody({ blocks }: { blocks: readonly ContentBlock[] }) {
         }
 
         if (block.type === "list") {
+          const List = block.ordered ? "ol" : "ul";
           return (
-            <ul key={block.id}>
+            <List key={block.id}>
               {block.items.map((item) => (
                 <li key={item}>{item}</li>
               ))}
-            </ul>
+            </List>
           );
         }
-
-        return block.level === 2 ? (
-          <h2 key={block.id}>{block.text}</h2>
-        ) : (
-          <h3 key={block.id}>{block.text}</h3>
-        );
+        if (block.type === "heading") return block.level === 2 ? <h2 id={block.id} key={block.id}>{block.text}</h2> : <h3 id={block.id} key={block.id}>{block.text}</h3>;
+        if (block.type === "quote") return <blockquote key={block.id}><p>{block.text}</p>{block.attribution ? <cite>{block.attribution}</cite> : null}</blockquote>;
+        if (block.type === "code") return <pre key={block.id} dir="ltr"><code data-language={block.language}>{block.code}</code></pre>;
+        if (block.type === "image") return <figure key={block.id}><Image src={block.src} width={block.width} height={block.height} alt={block.alt} sizes="(max-width: 768px) 100vw, 720px" />{block.caption ? <figcaption>{block.caption}</figcaption> : null}</figure>;
+        if (block.type === "links") return <p key={block.id} className={styles.linkList}>{block.links.map((link) => <Link key={link.href} href={link.href}>{link.label}</Link>)}</p>;
+        return <div className={styles.tableWrap} key={block.id}><table><thead><tr>{block.headers.map((header) => <th key={header} scope="col">{header}</th>)}</tr></thead><tbody>{block.rows.map((row, index) => <tr key={`${block.id}-${index}`}>{row.map((cell, cellIndex) => <td key={`${block.id}-${index}-${cellIndex}`}>{cell}</td>)}</tr>)}</tbody></table></div>;
       })}
     </article>
   );

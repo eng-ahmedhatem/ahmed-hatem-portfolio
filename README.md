@@ -17,7 +17,7 @@ Recommended workflow:
 4. Paste the contents of `START_HERE_CODEX_PROMPT.md` as the first coding task.
 5. Review the foundation before asking it to build the full homepage.
 
-This pack intentionally focuses on Phase 1 while preserving a clean path to the future Express + MongoDB CMS.
+The application now uses Express as its protected API layer and Supabase for PostgreSQL content, Auth, Storage, contact requests, and analytics.
 
 
 ## Bilingual requirements
@@ -29,7 +29,15 @@ The pack is configured for:
 - persisted explicit language selection
 - locale-prefixed public URLs
 - localized SEO/canonical/hreflang architecture
-- future bilingual Express + MongoDB CMS content
+- bilingual Express + Supabase CMS content
+
+## Supabase backend
+
+The public UI still consumes the typed content repository interface. The API implementation stores content in Supabase PostgreSQL, authenticates the administrator through Supabase Auth, uploads media to Supabase Storage, and records contact requests and privacy-preserving analytics in PostgreSQL.
+
+Apply the SQL migration and configure the server-only keys by following `supabase/README.md`.
+
+For production deployment from GitHub to Vercel, follow `DEPLOY_VERCEL_AR.md`. The CMS API is implemented with Next.js Route Handlers so the public site and administration deploy as one Vercel project; the standalone Express runner remains available only for legacy/local troubleshooting.
 
 Typography:
 - Arabic: IBM Plex Sans Arabic

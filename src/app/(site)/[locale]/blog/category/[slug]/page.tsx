@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ContentRows, PageShell } from "@/components/ui/page-shell";
+import { BlogIndex } from "@/components/blog/blog-index";
+import { PageShell } from "@/components/ui/page-shell";
 import { contentRepository } from "@/data/content-repository";
 import { SUPPORTED_LOCALES } from "@/domain/content/types";
 import { getCategoryViewModel } from "@/features/site/view-models";
@@ -11,6 +12,11 @@ import { createWebPageStructuredData } from "@/lib/seo/structured-data";
 
 interface CategoryPageProps {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams: Promise<{
+    q?: string | string[];
+    category?: string | string[];
+    page?: string | string[];
+  }>;
 }
 
 export async function generateStaticParams() {
@@ -44,8 +50,9 @@ export async function generateMetadata({
   });
 }
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
+export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
   const routeParams = await params;
+  const query = await searchParams;
   const locale = localeFromParam(routeParams.locale);
   const category = await getCategoryViewModel(locale, routeParams.slug);
 
@@ -66,7 +73,16 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         path,
       )}
     >
-      <ContentRows rows={category.rows} />
+      <BlogIndex
+        archive={category}
+        initialQuery={typeof query.q === "string" ? query.q : ""}
+        initialCategory={
+          typeof query.category === "string" ? query.category : "all"
+        }
+        initialPage={
+          typeof query.page === "string" ? Number.parseInt(query.page, 10) || 1 : 1
+        }
+      />
     </PageShell>
   );
 }

@@ -37,19 +37,29 @@ export function createLocalizedMetadata({
     alternatePaths.en ?? alternatePaths.ar ?? activePath,
   );
 
-  const images = seo.openGraph.image
-    ? [
-        {
-          ...seo.openGraph.image,
-          url: absoluteUrl(seo.openGraph.image.url),
-        },
-      ]
-    : undefined;
+  const fallbackImage = {
+    url: "/assets/logo/logo.png",
+    width: 1738,
+    height: 721,
+    alt: locale === "ar" ? "شعار أحمد حاتم" : "Ahmed Hatem logo",
+  };
+  const socialImage = seo.openGraph.image ?? fallbackImage;
+  const images = [
+    {
+      ...socialImage,
+      url: absoluteUrl(socialImage.url),
+    },
+  ];
 
   return {
     metadataBase: getSiteUrl(),
     title: seo.title,
     description: seo.description,
+    icons: {
+      icon: "/assets/logo/favicon-192.png",
+      shortcut: "/assets/logo/favicon-192.png",
+      apple: "/assets/logo/favicon-192.png",
+    },
     alternates: {
       canonical,
       languages: languageAlternates,
@@ -59,17 +69,17 @@ export function createLocalizedMetadata({
       follow: seo.robots.follow,
     },
     openGraph: {
-      type: seo.structuredData?.type === "Article" ? "article" : "website",
+      type: seo.structuredData?.type === "BlogPosting" ? "article" : "website",
       title: seo.openGraph.title,
       description: seo.openGraph.description,
       url: canonical,
-      siteName: locale === "ar" ? "منصة المطوّر" : "Developer Platform",
+      siteName: locale === "ar" ? "أحمد حاتم" : "Ahmed Hatem",
       locale: getOpenGraphLocale(locale),
       alternateLocale: locale === "ar" ? ["en_US"] : ["ar_AR"],
       images,
     },
     twitter: {
-      card: images ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: seo.openGraph.title,
       description: seo.openGraph.description,
       images: images?.map((image) => image.url),

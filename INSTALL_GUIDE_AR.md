@@ -182,7 +182,7 @@ http://localhost:3000
 لا تطلب في أول مرحلة:
 
 - Admin dashboard
-- MongoDB
+- Supabase PostgreSQL
 - Express
 - Node API
 - Authentication
@@ -219,7 +219,7 @@ Featured Projects.
 
 - Node.js
 - Express
-- MongoDB
+- Supabase PostgreSQL
 - Authentication
 - Admin Dashboard
 - Homepage CMS

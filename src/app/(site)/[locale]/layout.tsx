@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
+import Script from "next/script";
 
 import { fontVariables } from "@/app/fonts";
+import { AnalyticsTracker } from "@/components/analytics/analytics-tracker";
 import { MotionFoundation } from "@/components/motion/motion-foundation";
+import { SiteScrollProgress } from "@/components/motion/route-transition";
+import { ContactDock } from "@/components/layout/contact-dock";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { StructuredData } from "@/components/ui/structured-data";
@@ -18,6 +22,8 @@ interface LocalizedLayoutProps {
   params: Promise<{ locale: string }>;
 }
 
+const THEME_INITIALIZER = `try{const key="ah-portfolio-theme:v1";const saved=localStorage.getItem(key);document.documentElement.dataset.theme=saved==="light"?"light":"dark"}catch{document.documentElement.dataset.theme="dark"}`;
+
 export function generateStaticParams() {
   return SUPPORTED_LOCALES.map((locale) => ({ locale }));
 }
@@ -30,13 +36,32 @@ export default async function LocalizedLayout({
   const { settings, routes } = await getSiteChromeViewModel(locale);
 
   return (
-    <html lang={locale} dir={getDirection(locale)} className={fontVariables}>
+    <html
+      lang={locale}
+      dir={getDirection(locale)}
+      className={`${fontVariables} notranslate`}
+      data-scroll-behavior="smooth"
+      translate="no"
+      data-theme="dark"
+      suppressHydrationWarning
+    >
+      <head>
+        <meta name="google" content="notranslate" />
+      </head>
       <body>
+        <Script
+          id="theme-initializer"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: THEME_INITIALIZER }}
+        />
         <MotionFoundation>
+          <SiteScrollProgress />
           <StructuredData data={createWebsiteStructuredData(settings)} />
           <SiteHeader settings={settings} routes={routes} />
           {children}
           <SiteFooter settings={settings} />
+          <ContactDock settings={settings} />
+          <AnalyticsTracker locale={locale} />
         </MotionFoundation>
       </body>
     </html>

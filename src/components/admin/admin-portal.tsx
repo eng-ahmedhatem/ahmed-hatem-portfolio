@@ -1,0 +1,310 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useRouter } from "next/navigation";
+
+import { adminRequest, type AdminContentRecord, type ContentKind } from "./admin-api";
+import { AdminContentEditor } from "./admin-content-editor";
+import styles from "./admin.module.css";
+
+type View = "overview" | "content" | "messages" | "analytics";
+interface ContactItem { _id: string; name: string; email: string; phone?: string; service: string; details: string; locale: "ar" | "en"; status: "new" | "read" | "archived"; createdAt: string; }
+interface AnalyticsData { rangeDays: number; views: number; uniqueVisitors: number; byDevice: { _id: string; value: number }[]; byDay: { _id: string; value: number }[]; topPages: { _id: string; value: number }[]; }
+interface AuditItem { id: string; actorEmail?: string; action: string; entityKind?: string; entityId?: string; createdAt: string; }
+
+const kindLabels: Record<ContentKind, string> = {
+  "site-settings": "الهوية والملف الشخصي",
+  homepage: "الصفحة الرئيسية",
+  "static-page": "الصفحات",
+  project: "المشاريع",
+  post: "المقالات",
+  category: "تصنيفات المدونة",
+};
+
+function nestedString(source: Record<string, unknown>, path: string[]) {
+  let current: unknown = source;
+  for (const key of path) {
+    if (!current || typeof current !== "object") return "";
+    current = (current as Record<string, unknown>)[key];
+  }
+  return typeof current === "string" ? current : "";
+}
+
+function recordLabel(record: AdminContentRecord) {
+  return nestedString(record.payload, ["translations", "ar", "title"])
+    || nestedString(record.payload, ["translations", "ar", "name"])
+    || nestedString(record.payload, ["translations", "ar", "brandName"])
+    || kindLabels[record.kind];
+}
+
+function newRecord(kind: "project" | "post" | "category", records: AdminContentRecord[]): AdminContentRecord | null {
+  const source = records.find((record) => record.kind === kind);
+  if (!source) return null;
+  const stamp = Date.now();
+  const id = `${kind}-${stamp}`;
+  const payload = structuredClone(source.payload);
+  payload.id = id;
+  if (kind === "project") {
+    payload.status = "draft";
+    payload.featured = false;
+    payload.featuredOrder = undefined;
+    payload.technologies = [];
+    payload.links = [];
+    const mediaId = `media-${stamp}`;
+    payload.media = [{ id: mediaId, src: "", width: 1600, height: 1000, translations: { ar: { alt: "", caption: "" }, en: { alt: "", caption: "" } } }];
+    payload.coverMediaId = mediaId;
+    payload.updatedAt = new Date().toISOString();
+  }
+  if (kind === "post") {
+    payload.status = "draft";
+    payload.featured = false;
+    payload.publishedAt = undefined;
+    payload.categoryIds = [];
+    payload.tags = [];
+    payload.featuredImage = { id: `blog-media-${stamp}`, src: "", width: 1600, height: 1000, translations: { ar: { alt: "", caption: "" }, en: { alt: "", caption: "" } } };
+    payload.updatedAt = new Date().toISOString();
+  }
+  const translations = payload.translations;
+  if (translations && typeof translations === "object") {
+    for (const locale of ["ar", "en"] as const) {
+      const translation = (translations as Record<string, unknown>)[locale];
+      if (!translation || typeof translation !== "object") continue;
+      const item = translation as Record<string, unknown>;
+      if ("title" in item) item.title = locale === "ar" ? (kind === "project" ? "مشروع جديد" : "مقال جديد") : (kind === "project" ? "New project" : "New article");
+      if ("name" in item) item.name = locale === "ar" ? "تصنيف جديد" : "New category";
+      if ("slug" in item) item.slug = `${kind}-${stamp}-${locale}`;
+      if ("excerpt" in item) item.excerpt = locale === "ar" ? "أضف وصفًا مختصرًا قبل النشر." : "Add a short summary before publishing.";
+      if ("description" in item) item.description = locale === "ar" ? "أضف وصف التصنيف." : "Add the category description.";
+      if ("overview" in item) item.overview = "";
+      if ("challenge" in item) item.challenge = "";
+      if ("solution" in item) item.solution = "";
+      if ("content" in item) item.content = [];
+      const seo = item.seo;
+      if (seo && typeof seo === "object") {
+        const seoObject = seo as Record<string, unknown>;
+        seoObject.title = asString(item.title ?? item.name);
+        seoObject.description = asString(item.excerpt ?? item.description);
+        const openGraph = seoObject.openGraph;
+        if (openGraph && typeof openGraph === "object") {
+          (openGraph as Record<string, unknown>).title = seoObject.title;
+          (openGraph as Record<string, unknown>).description = seoObject.description;
+          delete (openGraph as Record<string, unknown>).image;
+        }
+      }
+    }
+  }
+  return { kind, entityId: id, payload };
+}
+
+function asString(value: unknown) {
+  return typeof value === "string" ? value : "";
+}
+
+function recordKey(record: Pick<AdminContentRecord, "kind" | "entityId">) {
+  return `${record.kind}:${record.entityId}`;
+}
+
+function recordStatus(record: AdminContentRecord) {
+  const status = record.payload.status;
+  if (status === "draft") return "مسودة";
+  if (record.kind === "project" && record.payload.featured) return "مميز";
+  if (status === "published") return "منشور";
+  return "مفعّل";
+}
+
+function recordPreviewHref(record: AdminContentRecord) {
+  if (record.payload.status === "draft") return null;
+  if (record.kind === "homepage" || record.kind === "site-settings") return "/ar";
+  if (record.kind === "static-page") return `/ar/${asString(record.payload.key)}`;
+  const slug = nestedString(record.payload, ["translations", "ar", "slug"]);
+  if (!slug) return null;
+  if (record.kind === "project") return `/ar/work/${encodeURIComponent(slug)}`;
+  if (record.kind === "post") return `/ar/blog/${encodeURIComponent(slug)}`;
+  if (record.kind === "category") return `/ar/blog/category/${encodeURIComponent(slug)}`;
+  return null;
+}
+
+function MiniBars({ data }: { data: { _id: string; value: number }[] }) {
+  const max = Math.max(1, ...data.map((item) => item.value));
+  return <div className={styles.miniBars}>{data.map((item) => <div key={item._id} title={`${item._id}: ${item.value}`}><i style={{ blockSize: `${Math.max(8, item.value / max * 100)}%` }} /><span>{item._id.slice(5)}</span></div>)}</div>;
+}
+
+export function AdminPortal() {
+  const router = useRouter();
+  const reduceMotion = useReducedMotion();
+  const [view, setView] = useState<View>("overview");
+  const [records, setRecords] = useState<AdminContentRecord[]>([]);
+  const [selectedId, setSelectedId] = useState("");
+  const [activeKind, setActiveKind] = useState<ContentKind>("homepage");
+  const [contacts, setContacts] = useState<ContactItem[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [activity, setActivity] = useState<AuditItem[]>([]);
+  const [dirtyRecords, setDirtyRecords] = useState<Set<string>>(() => new Set());
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    async function bootstrap() {
+      try {
+        const [contentResult, inboxResult, metricsResult, activityResult] = await Promise.allSettled([
+          adminRequest<{ records: AdminContentRecord[] }>("/admin/content"),
+          adminRequest<{ items: ContactItem[] }>("/admin/contacts"),
+          adminRequest<AnalyticsData>("/admin/analytics"),
+          adminRequest<{ items: AuditItem[] }>("/admin/activity"),
+        ]);
+        if (!mounted) return;
+        if (contentResult.status === "rejected") throw contentResult.reason;
+        const content = contentResult.value;
+        setRecords(content.records);
+        if (inboxResult.status === "fulfilled") setContacts(inboxResult.value.items);
+        if (metricsResult.status === "fulfilled") setAnalytics(metricsResult.value);
+        if (activityResult.status === "fulfilled") setActivity(activityResult.value.items);
+        const first = content.records.find((record) => record.kind === "homepage");
+        if (first) setSelectedId(first.entityId);
+      } catch {
+        router.replace("/admin/login");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    void bootstrap();
+    return () => { mounted = false; };
+  }, [router]);
+
+  useEffect(() => {
+    if (!dirtyRecords.size) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirtyRecords.size]);
+
+  const selected = records.find((record) => record.entityId === selectedId && record.kind === activeKind);
+  const kindRecords = useMemo(() => records.filter((record) => record.kind === activeKind), [activeKind, records]);
+  const counts = useMemo(() => ({
+    projects: records.filter((item) => item.kind === "project").length,
+    posts: records.filter((item) => item.kind === "post").length,
+    messages: contacts.filter((item) => item.status === "new").length,
+  }), [contacts, records]);
+
+  function chooseKind(kind: ContentKind) {
+    setActiveKind(kind);
+    setSelectedId(records.find((record) => record.kind === kind)?.entityId ?? "");
+  }
+
+  async function save() {
+    if (!selected) return;
+    setSaving(true); setError(""); setNotice("");
+    try {
+      const result = await adminRequest<{ record: AdminContentRecord }>(`/admin/content/${selected.kind}/${selected.entityId}`, {
+        method: "PUT",
+        body: JSON.stringify({ payload: selected.payload, version: selected.updatedAt }),
+      });
+      setRecords((current) => current.map((item) => item.kind === selected.kind && item.entityId === selected.entityId ? result.record : item));
+      setDirtyRecords((current) => { const next = new Set(current); next.delete(recordKey(selected)); return next; });
+      setNotice(selected.payload.status === "draft" ? "تم حفظ المسودة بنجاح." : "تم حفظ التغييرات ونشرها بنجاح.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "تعذّر حفظ المحتوى.");
+    } finally { setSaving(false); }
+  }
+
+  function create(kind: "project" | "post" | "category") {
+    const record = newRecord(kind, records);
+    if (!record) return;
+    setRecords((current) => [record, ...current]);
+    setDirtyRecords((current) => new Set(current).add(recordKey(record)));
+    setActiveKind(kind);
+    setSelectedId(record.entityId);
+    setNotice("عنصر جديد جاهز. أكمل بياناته ثم اضغط حفظ ونشر.");
+  }
+
+  async function remove() {
+    if (!selected || !["project", "post", "category"].includes(selected.kind)) return;
+    if (!window.confirm(`حذف «${recordLabel(selected)}» نهائيًا؟`)) return;
+    await adminRequest(`/admin/content/${selected.kind}/${selected.entityId}`, { method: "DELETE" });
+    setRecords((current) => current.filter((item) => !(item.kind === selected.kind && item.entityId === selected.entityId)));
+    setSelectedId("");
+    setDirtyRecords((current) => { const next = new Set(current); next.delete(recordKey(selected)); return next; });
+  }
+
+  async function updateContact(item: ContactItem, status: ContactItem["status"]) {
+    const result = await adminRequest<{ item: ContactItem }>(`/admin/contacts/${item._id}`, { method: "PATCH", body: JSON.stringify({ status }) });
+    setContacts((current) => current.map((candidate) => candidate._id === item._id ? result.item : candidate));
+  }
+
+  async function logout() {
+    await adminRequest("/auth/logout", { method: "POST" });
+    router.replace("/admin/login");
+  }
+
+  if (loading) return <main className={styles.adminLoading}><div className={styles.loaderMark}>AH<i /></div><p>جارٍ تجهيز لوحة الإدارة…</p></main>;
+
+  return (
+    <main className={styles.portal}>
+      <aside className={styles.sidebar}>
+        <div className={styles.sidebarBrand}><div className={styles.adminMark}><span>AH</span><i /></div><div><b>Ahmed Hatem</b><small>Content Studio</small></div></div>
+        <nav aria-label="التنقل في لوحة الإدارة">
+          {([[
+            "overview", "نظرة عامة", "⌁"], ["content", "إدارة المحتوى", "◇"], ["messages", "طلبات التواصل", "✉"], ["analytics", "التحليلات", "↗"]] as [View, string, string][]).map(([key, label, icon]) => (
+            <button type="button" key={key} data-active={view === key} onClick={() => setView(key)}><span aria-hidden="true">{icon}</span>{label}{key === "messages" && counts.messages ? <em>{counts.messages}</em> : null}</button>
+          ))}
+        </nav>
+        <div className={styles.sidebarFoot}><a href="/ar" target="_blank">عرض الموقع <span>↗</span></a><button type="button" onClick={() => void logout()}>تسجيل الخروج</button></div>
+      </aside>
+
+      <section className={styles.workspace}>
+        <header className={styles.workspaceHeader}><div><p>AH / ADMIN</p><h1>{view === "overview" ? "صباح الإبداع" : view === "content" ? "إدارة المحتوى" : view === "messages" ? "طلبات التواصل" : "تحليلات الزيارات"}</h1></div><span className={styles.liveState}><i /> النظام متصل</span></header>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={view} className={styles.view} initial={reduceMotion ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={reduceMotion ? undefined : { opacity: 0, y: -6 }} transition={{ duration: 0.24 }}>
+            {view === "overview" ? (
+              <>
+                <div className={styles.metricGrid}>
+                  <article><span>المشاريع</span><strong>{counts.projects}</strong><small>داخل معرض الأعمال</small></article>
+                  <article><span>المقالات</span><strong>{counts.posts}</strong><small>منشور ومسودة</small></article>
+                  <article><span>رسائل جديدة</span><strong>{counts.messages}</strong><small>بانتظار المراجعة</small></article>
+                  <article><span>زيارات 30 يومًا</span><strong>{analytics?.views ?? 0}</strong><small>{analytics?.uniqueVisitors ?? 0} زائر فريد</small></article>
+                </div>
+                <div className={styles.overviewGrid}>
+                  <article className={styles.overviewPanel}><header><div><span>نشاط الزيارات</span><h2>آخر 30 يومًا</h2></div><button type="button" onClick={() => setView("analytics")}>كل التحليلات</button></header><MiniBars data={analytics?.byDay ?? []} /></article>
+                  <article className={styles.quickPanel}><span>إجراء سريع</span><h2>ما الذي تريد إضافته؟</h2><button type="button" onClick={() => { create("project"); setView("content"); }}>مشروع جديد <b>＋</b></button><button type="button" onClick={() => { create("post"); setView("content"); }}>مقال جديد <b>＋</b></button></article>
+                </div>
+                <article className={styles.activityPanel}><header><div><span>سجل الإدارة</span><h2>آخر التغييرات المؤمنة</h2></div></header><div>{activity.length ? activity.slice(0, 8).map((item) => <div key={item.id}><time>{new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time><p><b>{item.action}</b><span>{item.entityKind} / {item.entityId}</span></p><small>{item.actorEmail}</small></div>) : <p className={styles.inlineEmpty}>سيظهر النشاط هنا بعد أول عملية حفظ.</p>}</div></article>
+              </>
+            ) : null}
+
+            {view === "content" ? (
+              <div className={styles.contentWorkspace}>
+                <div className={styles.kindRail}>
+                  {(Object.keys(kindLabels) as ContentKind[]).map((kind) => <button type="button" key={kind} data-active={activeKind === kind} onClick={() => chooseKind(kind)}>{kindLabels[kind]}<span>{records.filter((item) => item.kind === kind).length}</span></button>)}
+                  <div className={styles.createButtons}><button type="button" onClick={() => create("project")}>+ مشروع</button><button type="button" onClick={() => create("post")}>+ مقال</button></div>
+                </div>
+                <div className={styles.recordRail}>
+                  <p>{kindLabels[activeKind]}</p>
+                  {kindRecords.map((record) => <button type="button" key={record.entityId} data-active={selectedId === record.entityId} onClick={() => setSelectedId(record.entityId)}><b>{recordLabel(record)}</b><small>{record.entityId}</small><em data-dirty={dirtyRecords.has(recordKey(record))}>{dirtyRecords.has(recordKey(record)) ? "غير محفوظ" : recordStatus(record)}</em></button>)}
+                </div>
+                <div className={styles.editorWorkspace}>
+                  {selected ? <><div className={styles.editorToolbar}><div><small>{kindLabels[selected.kind]} · {recordStatus(selected)}{dirtyRecords.has(recordKey(selected)) ? " · تغييرات غير محفوظة" : ""}</small><h2>{recordLabel(selected)}</h2></div><div>{recordPreviewHref(selected) ? <a className={styles.previewButton} href={recordPreviewHref(selected) ?? undefined} target="_blank" rel="noreferrer">معاينة ↗</a> : null}{["project", "post", "category"].includes(selected.kind) ? <button type="button" className={styles.dangerButton} onClick={() => void remove()}>حذف</button> : null}<button type="button" className={styles.saveButton} onClick={() => void save()} disabled={saving || !dirtyRecords.has(recordKey(selected))}>{saving ? "جارٍ الحفظ…" : selected.payload.status === "draft" ? "حفظ المسودة" : "حفظ ونشر"}</button></div></div><AdminContentEditor record={selected} records={records} onChange={(next) => { setRecords((current) => current.map((item) => item.kind === next.kind && item.entityId === next.entityId ? next : item)); setDirtyRecords((current) => new Set(current).add(recordKey(next))); setNotice(""); setError(""); }} /></> : <div className={styles.emptyState}>اختر عنصرًا لتحريره.</div>}
+                  <AnimatePresence>{notice || error ? <motion.p className={error ? styles.noticeError : styles.notice} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>{error || notice}</motion.p> : null}</AnimatePresence>
+                </div>
+              </div>
+            ) : null}
+
+            {view === "messages" ? (
+              <div className={styles.messageList}>{contacts.length ? contacts.map((item) => <article key={item._id} data-status={item.status}><header><div><span>{item.status === "new" ? "جديد" : item.status === "read" ? "تمت القراءة" : "مؤرشف"}</span><h2>{item.name}</h2></div><time>{new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></header><div className={styles.messageMeta}><a href={`mailto:${item.email}`}>{item.email}</a>{item.phone ? <a href={`tel:${item.phone}`}>{item.phone}</a> : null}<span>{item.service}</span></div><p>{item.details}</p><footer><button type="button" onClick={() => void updateContact(item, "read")}>تمت القراءة</button><button type="button" onClick={() => void updateContact(item, "archived")}>أرشفة</button></footer></article>) : <div className={styles.emptyState}>لا توجد طلبات تواصل حتى الآن.</div>}</div>
+            ) : null}
+
+            {view === "analytics" ? (
+              <div className={styles.analyticsView}>
+                <div className={styles.metricGrid}><article><span>إجمالي المشاهدات</span><strong>{analytics?.views ?? 0}</strong><small>آخر {analytics?.rangeDays ?? 30} يومًا</small></article><article><span>الزوار الفريدون</span><strong>{analytics?.uniqueVisitors ?? 0}</strong><small>بدون تخزين عنوان IP</small></article>{analytics?.byDevice.map((item) => <article key={item._id}><span>{item._id === "mobile" ? "الهاتف" : item._id === "tablet" ? "الجهاز اللوحي" : "الكمبيوتر"}</span><strong>{item.value}</strong><small>مشاهدة</small></article>)}</div>
+                <div className={styles.analyticsGrid}><article className={styles.overviewPanel}><header><div><span>التوزيع اليومي</span><h2>حركة الزيارات</h2></div></header><MiniBars data={analytics?.byDay ?? []} /></article><article className={styles.topPages}><span>أكثر الصفحات زيارة</span>{analytics?.topPages.map((item, index) => <div key={item._id}><b>{String(index + 1).padStart(2, "0")}</b><p>{item._id}</p><strong>{item.value}</strong></div>)}</article></div>
+              </div>
+            ) : null}
+          </motion.div>
+        </AnimatePresence>
+      </section>
+    </main>
+  );
+}

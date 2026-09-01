@@ -8,7 +8,7 @@ We are starting Phase 1 of a premium light-mode developer portfolio platform.
 
 Create the frontend foundation only. Do not build the entire homepage yet.
 
-Set up the architecture so future public sections are content-driven, bilingual (`ar`/`en`), RTL/LTR-safe, and Phase 2 can replace mock data with an Express + MongoDB API without rewriting presentation components.
+Set up the architecture so future public sections are content-driven, bilingual (`ar`/`en`), RTL/LTR-safe, and Phase 2 can replace mock data with an Express + Supabase API without rewriting presentation components.
 
 ## Required deliverables
 

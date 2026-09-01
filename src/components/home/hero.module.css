@@ -1,0 +1,521 @@
+.hero {
+  position: relative;
+  overflow: clip;
+  border-block-end: 1px solid var(--border);
+  background: var(--background);
+  isolation: isolate;
+}
+
+.layout {
+  position: relative;
+  min-block-size: max(40.5rem, calc(100svh - 4.5rem));
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: auto auto 1fr auto;
+  column-gap: clamp(1.5rem, 3vw, 3rem);
+  padding-block: clamp(2.6rem, 5.5vh, 4.4rem) clamp(2.8rem, 5vh, 4rem);
+}
+
+.identityRail {
+  position: relative;
+  z-index: 5;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.identity {
+  position: relative;
+  display: grid;
+  gap: 0.18rem;
+  padding-inline-start: 1.05rem;
+}
+
+.identity::before {
+  position: absolute;
+  inset-block: 0.12rem;
+  inset-inline-start: 0;
+  inline-size: 3px;
+  background: var(--accent);
+  content: "";
+}
+
+.identity strong {
+  color: var(--secondary-dark);
+  font-size: clamp(1.22rem, 1.55vw, 1.58rem);
+  font-weight: 770;
+  letter-spacing: -0.045em;
+  line-height: 1.15;
+}
+
+:global(html[lang="ar"]) .identity strong {
+  font-family: var(--font-ar-display), var(--font-ar-body), sans-serif;
+  font-size: clamp(1.38rem, 1.7vw, 1.72rem);
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+.identity small {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 720;
+  line-height: 1.55;
+}
+
+.liveState {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding-block-start: 0.35rem;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 730;
+}
+
+.liveState i {
+  inline-size: 0.42rem;
+  block-size: 0.42rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0.26rem color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.titleBlock {
+  position: relative;
+  z-index: 4;
+  grid-column: 1 / 8;
+  grid-row: 2;
+  align-self: start;
+  max-inline-size: 50rem;
+  margin-block-start: clamp(3.5rem, 8vh, 6.2rem);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--accent-strong);
+  font-size: var(--text-sm);
+  font-weight: 760;
+}
+
+.eyebrow i {
+  inline-size: 2.35rem;
+  block-size: 2px;
+  flex: 0 0 auto;
+  background: var(--accent);
+}
+
+.title {
+  max-inline-size: 16ch;
+  margin-block-start: 0.9rem;
+  color: var(--secondary-dark);
+  font-size: clamp(2.55rem, 3.8vw, 3.65rem);
+  font-weight: 710;
+  letter-spacing: -0.066em;
+  line-height: 0.99;
+  text-wrap: balance;
+}
+
+.title > span {
+  inline-size: max-content;
+  max-inline-size: 100%;
+  display: block;
+  padding-inline-end: 0.13em;
+  background: var(--background);
+}
+
+:global(html[lang="ar"]) .title {
+  max-inline-size: none;
+  font-family: var(--font-ar-display), var(--font-ar-body), sans-serif;
+  font-size: clamp(2.65rem, 3.9vw, 3.75rem);
+  font-weight: 620;
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+:global(html[lang="ar"]) .title > span {
+  max-inline-size: none;
+  white-space: nowrap;
+}
+
+.supportingCopy {
+  position: relative;
+  z-index: 4;
+  grid-column: 1 / 6;
+  grid-row: 4;
+  align-self: end;
+  max-inline-size: 34rem;
+}
+
+.summary {
+  position: relative;
+  color: var(--text-secondary);
+  font-size: clamp(1rem, 1.05vw, 1.04rem);
+  line-height: var(--leading-body);
+  text-wrap: pretty;
+  background: var(--background);
+  box-shadow: 0 0 0 0.45rem var(--background);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem 1.15rem;
+  margin-block-start: 1.25rem;
+}
+
+.blueprint {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.markStage {
+  position: absolute;
+  inset-block: 3% 4%;
+  inset-inline-start: -17%;
+  inline-size: min(94%, 74rem);
+  transform-origin: center;
+}
+
+.markPointer {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.brandCanvas {
+  inline-size: 100%;
+  block-size: 100%;
+  display: block;
+  overflow: visible;
+  fill: none;
+}
+
+.portraitMask {
+  position: absolute;
+  inset-block-end: -0.2rem;
+  inset-inline-end: 4%;
+  z-index: 3;
+  inline-size: clamp(22rem, 39vw, 33rem);
+  block-size: clamp(27rem, 54vw, 39rem);
+  overflow: hidden;
+  transform-origin: center bottom;
+}
+
+.portraitDepth {
+  inline-size: 100%;
+  block-size: 100%;
+  transform-origin: center bottom;
+}
+
+.portraitPointer {
+  position: relative;
+  inline-size: 100%;
+  block-size: 100%;
+  transform-origin: center bottom;
+}
+
+.portraitThread {
+  position: absolute;
+  inset-block-start: 47%;
+  inset-inline-start: -3%;
+  z-index: 4;
+  inline-size: 38%;
+  block-size: 3px;
+  display: block;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, white 58%, transparent);
+  transform-origin: left center;
+}
+
+.portraitThread::after {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: 0;
+  inline-size: 0.48rem;
+  block-size: 0.48rem;
+  border: 2px solid var(--background);
+  border-radius: 50%;
+  background: var(--accent);
+  translate: 50% -50%;
+  content: "";
+}
+
+:global(html[dir="rtl"]) .portraitThread {
+  transform-origin: right center;
+}
+
+:global(html[dir="rtl"]) .portraitThread::after {
+  translate: -50% -50%;
+}
+
+.portrait {
+  inline-size: 100%;
+  block-size: 100%;
+  display: block;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 1.65rem 1.9rem color-mix(in srgb, var(--secondary-dark) 15%, transparent));
+}
+
+.orbitPath,
+.echoPath,
+.markA,
+.markH,
+.signalSlash {
+  vector-effect: non-scaling-stroke;
+}
+
+.orbitPath {
+  stroke: color-mix(in srgb, var(--accent) 48%, transparent);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.echoPath {
+  stroke: color-mix(in srgb, var(--secondary-dark) 10%, transparent);
+  stroke-width: 1.2;
+  stroke-linecap: square;
+}
+
+.markA {
+  stroke: var(--accent);
+  stroke-width: clamp(16px, 1.85vw, 24px);
+  stroke-linecap: square;
+  stroke-linejoin: bevel;
+  opacity: 0.52;
+  filter: drop-shadow(0 1.1rem 1.7rem color-mix(in srgb, var(--accent) 9%, transparent));
+}
+
+.markH {
+  stroke: var(--secondary-dark);
+  stroke-width: clamp(11px, 1.25vw, 17px);
+  stroke-linecap: square;
+  stroke-linejoin: bevel;
+  opacity: 0.3;
+}
+
+.signalSlash {
+  stroke: var(--accent);
+  stroke-width: 5;
+  stroke-linecap: square;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--accent) 35%, transparent));
+}
+
+.fixedNode,
+.liveNode {
+  fill: var(--accent);
+  stroke: var(--background);
+  stroke-width: 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.liveNode {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 48%, transparent));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@media (max-width: 64rem) {
+  .layout {
+    min-block-size: 43rem;
+  }
+
+  .titleBlock {
+    grid-column: 1 / 9;
+    margin-block-start: 4.4rem;
+  }
+
+  .title,
+  :global(html[lang="ar"]) .title {
+    font-size: clamp(2.5rem, 5.3vw, 3.35rem);
+  }
+
+  .markStage {
+    inset-inline-start: -20%;
+    inline-size: 100%;
+  }
+
+}
+
+@media (max-width: 55.99rem) {
+  .layout {
+    min-block-size: 56rem;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr auto;
+    row-gap: 0;
+    padding-block: clamp(3.4rem, 8vw, 4.4rem) 3.5rem;
+  }
+
+  .titleBlock {
+    grid-column: 1;
+    grid-row: 2;
+    inline-size: 62%;
+    justify-self: start;
+    margin-block-start: 3.2rem;
+  }
+
+  .title,
+  :global(html[lang="ar"]) .title {
+    font-size: clamp(2.35rem, 7vw, 3.2rem);
+  }
+
+  :global(html[lang="ar"]) .titleBlock {
+    inline-size: 72%;
+  }
+
+  :global(html[lang="ar"]) .title {
+    font-size: clamp(2.2rem, 5.6vw, 2.7rem);
+  }
+
+  .markStage {
+    inset-block: 17% 10%;
+    inset-inline-start: -22%;
+    inline-size: 112%;
+  }
+
+  .supportingCopy {
+    grid-column: 1;
+    grid-row: 4;
+    max-inline-size: 55%;
+  }
+
+  .portraitMask {
+    inset-block-end: -0.15rem;
+    inset-inline-end: 0;
+    left: auto;
+    inline-size: clamp(18.5rem, 46vw, 23rem);
+    block-size: 30rem;
+    translate: 0 0;
+  }
+}
+
+@media (max-width: 38rem) {
+  .layout {
+    min-block-size: 57rem;
+    padding-block-start: 3.1rem;
+    padding-block-end: 3rem;
+  }
+
+  .identityRail {
+    gap: 1rem;
+  }
+
+  .identity {
+    padding-inline-start: 0.85rem;
+  }
+
+  .identity strong,
+  :global(html[lang="ar"]) .identity strong {
+    font-size: 1.25rem;
+  }
+
+  .identity small {
+    max-inline-size: 12rem;
+    font-size: var(--text-sm);
+  }
+
+  .liveState {
+    max-inline-size: 7rem;
+    align-items: flex-start;
+    font-size: var(--text-sm);
+    text-align: end;
+  }
+
+  .liveState i {
+    margin-block-start: 0.18rem;
+  }
+
+  .titleBlock {
+    inline-size: 100%;
+    margin-block-start: 2.6rem;
+  }
+
+  :global(html[lang="ar"]) .titleBlock {
+    inline-size: 100%;
+  }
+
+  .eyebrow {
+    font-size: var(--text-sm);
+  }
+
+  .eyebrow i {
+    inline-size: 1.7rem;
+  }
+
+  .title,
+  :global(html[lang="ar"]) .title {
+    max-inline-size: 15ch;
+    font-size: clamp(2.02rem, 9vw, 2.45rem);
+  }
+
+  :global(html[lang="ar"]) .title {
+    max-inline-size: none;
+    font-size: clamp(2rem, 8.6vw, 2.35rem);
+  }
+
+  .markStage {
+    inset-block: 23% 29%;
+    inset-inline-start: -28%;
+    inline-size: 132%;
+    opacity: 0.52;
+  }
+
+  .portraitMask {
+    inset-block-end: 16.5rem;
+    inset-inline-end: auto;
+    left: 50%;
+    inline-size: min(80vw, 19.5rem);
+    block-size: 21.5rem;
+    translate: -50% 0;
+  }
+
+  .portraitThread {
+    display: none;
+  }
+
+  .supportingCopy {
+    align-self: end;
+    max-inline-size: 100%;
+  }
+
+  .summary {
+    font-size: 1rem;
+  }
+
+  .actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .actions a {
+    inline-size: 100%;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titleBlock,
+  .supportingCopy,
+  .markStage,
+  .markPointer,
+  .portraitPointer,
+  .portraitDepth,
+  .portraitThread,
+  .liveNode {
+    transform: none !important;
+  }
+
+  .markA,
+  .liveNode {
+    filter: none;
+  }
+}

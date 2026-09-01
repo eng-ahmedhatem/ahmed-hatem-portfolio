@@ -1,0 +1,49 @@
+.action {
+  --arrow-shift: 5px;
+  position: relative;
+  min-block-size: 3.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.2;
+  touch-action: manipulation;
+  transition: color var(--duration-fast) var(--ease-premium), transform var(--duration-fast) var(--ease-premium), box-shadow var(--duration-fast) var(--ease-premium);
+}
+:global(html[dir="rtl"]) .action { --arrow-shift: -5px; }
+.primary {
+  isolation: isolate;
+  overflow: hidden;
+  padding-inline: 1.25rem;
+  border-radius: 0.55rem;
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: 0 0.9rem 1.8rem -1.2rem rgb(var(--primary-rgb) / 0.62);
+}
+.primary::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 28%, rgb(255 255 255 / 0.12) 48%, transparent 68%);
+  content: "";
+  transform: translateX(-125%) skewX(-8deg);
+  transition: transform 480ms var(--ease-premium);
+}
+:global(html[dir="rtl"]) .primary::before { transform: translateX(125%) skewX(8deg); }
+.primary:hover { background: var(--primary-dark); color: var(--on-primary); box-shadow: 0 1.15rem 2.1rem -1.2rem rgb(var(--primary-rgb) / 0.58); transform: translateY(-2px); }
+.primary:hover::before, :global(html[dir="rtl"]) .primary:hover::before { transform: translateX(125%) skewX(-8deg); }
+:global(html[dir="rtl"]) .primary:hover::before { transform: translateX(-125%) skewX(8deg); }
+.secondary { padding-inline: 0.1rem; }
+.secondary::after { position: absolute; inset-block-end: 0.35rem; inset-inline: 0; block-size: 1px; background: currentColor; content: ""; transform: scaleX(0.2); transform-origin: left; transition: transform var(--duration-ui) var(--ease-premium); }
+:global(html[dir="rtl"]) .secondary::after { transform-origin: right; }
+.secondary:hover { transform: translateY(-1px); }
+.secondary:hover::after { transform: scaleX(1); }
+.arrow { inline-size: 1rem; block-size: 1rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; transition: transform var(--duration-fast) var(--ease-premium); }
+:global(html[dir="rtl"]) .arrow { transform: scaleX(-1); }
+.action:hover .arrow { transform: translateX(var(--arrow-shift)); }
+:global(html[dir="rtl"]) .action:hover .arrow { transform: translateX(var(--arrow-shift)) scaleX(-1); }
+.action:active { transform: translateY(0) scale(0.985); }
+@media (prefers-reduced-motion: reduce) { .action, .arrow, .primary::before, .secondary::after { transition-duration: 0.01ms; } .action:hover, .action:active { transform: none; } }

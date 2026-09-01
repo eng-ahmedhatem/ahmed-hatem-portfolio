@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ArticleBody, PageShell } from "@/components/ui/page-shell";
+import { BlogArticle } from "@/components/blog/blog-article";
+import { StructuredData } from "@/components/ui/structured-data";
 import { contentRepository } from "@/data/content-repository";
 import { SUPPORTED_LOCALES } from "@/domain/content/types";
 import { getPostViewModel } from "@/features/site/view-models";
 import { localeFromParam } from "@/lib/i18n/locale-param";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
-import { createWebPageStructuredData } from "@/lib/seo/structured-data";
+import { createBlogPostingStructuredData } from "@/lib/seo/structured-data";
 
 interface BlogPostPageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -57,11 +58,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     post.intro.alternatePaths[locale] ?? `/${locale}/blog/${routeParams.slug}`;
 
   return (
-    <PageShell
-      intro={post.intro}
-      structuredData={createWebPageStructuredData(locale, post.intro.seo, path)}
-    >
-      <ArticleBody blocks={post.body} />
-    </PageShell>
+    <>
+      <StructuredData
+        data={createBlogPostingStructuredData(
+          locale,
+          post.intro.seo,
+          path,
+          post.publishedAt,
+        )}
+      />
+      <BlogArticle post={post} />
+    </>
   );
 }

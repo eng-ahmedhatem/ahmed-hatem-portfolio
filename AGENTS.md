@@ -14,7 +14,7 @@ Current scope is Phase 1 public frontend only.
 
 Do NOT implement until explicitly requested:
 - Express / Node API
-- MongoDB
+- Supabase
 - authentication
 - admin dashboard / CMS
 - analytics
@@ -39,7 +39,7 @@ Use:
 UI → feature/view layer → content repository interface → mock repository
 
 Future:
-UI → feature/view layer → content repository interface → API repository → Express → MongoDB
+UI → feature/view layer → content repository interface → API repository → Express → Supabase
 
 Keep shared machine/technical fields separate from translated editorial fields.
 
@@ -154,3 +154,13 @@ Do not load GSAP skills unless the current task actually uses GSAP.
 - For routine scoped work, avoid unnecessary planning/research.
 - Run only relevant verification; foundation completion requires lint, typecheck (if configured), and production build.
 - Stop when the requested task is complete.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

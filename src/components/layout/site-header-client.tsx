@@ -1,9 +1,11 @@
 "use client";
 
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
+import { AnimatePresence, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
+import * as motion from "motion/react-m";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Container } from "@/components/ui/container";
 import type {
@@ -13,16 +15,22 @@ import type {
 } from "@/domain/content/types";
 
 import { LanguageSwitcher } from "./language-switcher";
+import { ThemeSwitcher } from "./theme-switcher";
 import styles from "./site-header.module.css";
 
 interface SiteHeaderClientProps {
   locale: Locale;
   brandName: string;
-  brandDescriptor: string;
+  logoSrc?: string;
+  logoWidth?: number;
+  logoHeight?: number;
   navigationLabel: string;
   navigation: readonly NavigationItem[];
   skipToContentLabel: string;
   languageSwitcherLabel: string;
+  themeSwitcherLabel: string;
+  lightThemeLabel: string;
+  darkThemeLabel: string;
   mobileMenuOpenLabel: string;
   mobileMenuCloseLabel: string;
   mobileMenuLabel: string;
@@ -76,11 +84,16 @@ function DirectionalArrow() {
 export function SiteHeaderClient({
   locale,
   brandName,
-  brandDescriptor,
+  logoSrc,
+  logoWidth,
+  logoHeight,
   navigationLabel,
   navigation,
   skipToContentLabel,
   languageSwitcherLabel,
+  themeSwitcherLabel,
+  lightThemeLabel,
+  darkThemeLabel,
   mobileMenuOpenLabel,
   mobileMenuCloseLabel,
   mobileMenuLabel,
@@ -95,15 +108,6 @@ export function SiteHeaderClient({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mobilePanelRef = useRef<HTMLDivElement>(null);
-  const numberFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat(locale, {
-        minimumIntegerDigits: 2,
-        useGrouping: false,
-      }),
-    [locale],
-  );
-
   useMotionValueEvent(scrollY, "change", (latestScrollPosition) => {
     const nextScrolledState = latestScrollPosition > 16;
     setIsScrolled((currentState) =>
@@ -246,15 +250,19 @@ export function SiteHeaderClient({
         <span className={styles.stickyLine} aria-hidden="true" />
         <Container className={styles.inner}>
           <Link className={styles.brand} href={`/${locale}`}>
-            <span className={styles.brandSignal} aria-hidden="true">
-              <i />
-              <i />
-              <i />
-            </span>
-            <span className={styles.brandCopy}>
-              <strong translate="no">{brandName}</strong>
-              <small>{brandDescriptor}</small>
-            </span>
+            {logoSrc && logoWidth && logoHeight ? (
+              <Image
+                className={styles.brandLogo}
+                src={logoSrc}
+                width={logoWidth}
+                height={logoHeight}
+                sizes="(max-width: 1023px) 144px, 180px"
+                alt={brandName}
+                loading="eager"
+              />
+            ) : (
+              <span className={styles.brandSignal} aria-hidden="true"><i /><i /></span>
+            )}
           </Link>
 
           <nav className={styles.desktopNavigation} aria-label={navigationLabel}>
@@ -269,7 +277,7 @@ export function SiteHeaderClient({
                       aria-current={ariaCurrent}
                       data-active={Boolean(ariaCurrent)}
                     >
-                      <span>{item.label}</span>
+                      <span className={styles.desktopNavLabel}>{item.label}</span>
                       {ariaCurrent ? (
                         <motion.span
                           className={styles.activeIndicator}
@@ -289,6 +297,11 @@ export function SiteHeaderClient({
           </nav>
 
           <div className={styles.desktopActions}>
+            <ThemeSwitcher
+              label={themeSwitcherLabel}
+              lightLabel={lightThemeLabel}
+              darkLabel={darkThemeLabel}
+            />
             <LanguageSwitcher
               currentLocale={locale}
               label={languageSwitcherLabel}
@@ -342,7 +355,6 @@ export function SiteHeaderClient({
               <Container className={styles.mobilePanelInner}>
                 <div className={styles.mobilePanelLead}>
                   <p>{mobileMenuTitle}</p>
-                  <span>{brandDescriptor}</span>
                 </div>
 
                 <nav aria-label={navigationLabel}>
@@ -354,7 +366,22 @@ export function SiteHeaderClient({
                         locale,
                       );
                       return (
-                        <li key={item.key}>
+                        <motion.li
+                          key={item.key}
+                          initial={
+                            shouldReduceMotion
+                              ? { opacity: 0 }
+                              : { opacity: 0, y: 10 }
+                          }
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{
+                            delay: shouldReduceMotion
+                              ? 0
+                              : 0.08 + index * 0.045,
+                            duration: shouldReduceMotion ? 0.01 : 0.32,
+                            ease: PREMIUM_EASE,
+                          }}
+                        >
                           <Link
                             className={styles.mobileNavLink}
                             href={item.href}
@@ -363,21 +390,23 @@ export function SiteHeaderClient({
                             data-menu-initial-focus={index === 0 ? "true" : undefined}
                             onClick={closeMenuForNavigation}
                           >
-                            <span className={styles.mobileNavIndex} aria-hidden="true">
-                              {numberFormatter.format(index + 1)}
-                            </span>
                             <span className={styles.mobileNavLabel}>
                               {item.label}
                             </span>
                             <DirectionalArrow />
                           </Link>
-                        </li>
+                        </motion.li>
                       );
                     })}
                   </ol>
                 </nav>
 
                 <div className={styles.mobileUtilities}>
+                  <ThemeSwitcher
+                    label={themeSwitcherLabel}
+                    lightLabel={lightThemeLabel}
+                    darkLabel={darkThemeLabel}
+                  />
                   <LanguageSwitcher
                     currentLocale={locale}
                     label={languageSwitcherLabel}

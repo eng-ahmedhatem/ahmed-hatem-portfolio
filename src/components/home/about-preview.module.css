@@ -1,0 +1,311 @@
+.section {
+  position: relative;
+  overflow: clip;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 44rem;
+  padding-block: clamp(4.75rem, 7vw, 6.5rem);
+  border-block-start: 1px solid var(--border);
+  background: var(--background);
+  scroll-margin-block-start: 5rem;
+}
+
+.scrollArtwork {
+  inset-block: 2% -4%;
+  inset-inline: -5%;
+  z-index: 0;
+  inline-size: 110%;
+  block-size: 102%;
+  opacity: 0.64;
+}
+
+.layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(22rem, 0.82fr) minmax(26rem, 1.18fr);
+  gap: clamp(3rem, 9vw, 9rem);
+  align-items: center;
+}
+
+.copy {
+  position: relative;
+  z-index: 2;
+  max-inline-size: 38rem;
+}
+
+.eyebrow {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.primarySkill {
+  margin-block-start: 2rem;
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  letter-spacing: 0.035em;
+}
+
+.copy h2 {
+  max-inline-size: 12ch;
+  margin-block-start: 0.85rem;
+  font-size: clamp(2.85rem, 4.4vw, 4.65rem);
+  font-weight: 650;
+  letter-spacing: -0.065em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+:global(html[lang="ar"]) .copy h2 {
+  font-family: var(--font-ar-display), var(--font-ar-body), sans-serif;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.16;
+}
+
+.summary {
+  max-inline-size: 35rem;
+  margin-block-start: 1.35rem;
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  line-height: var(--leading-body);
+}
+
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.15rem;
+  margin-block-start: 1.75rem;
+  font-size: var(--text-sm);
+  font-weight: 750;
+  list-style: none;
+}
+
+.skills li {
+  position: relative;
+  padding-inline-start: 0.7rem;
+}
+
+.skills li::before {
+  position: absolute;
+  inset-block-start: 0.45em;
+  inset-inline-start: 0;
+  inline-size: 0.27rem;
+  block-size: 0.27rem;
+  border-radius: 50%;
+  background: var(--accent);
+  content: "";
+}
+
+.portraitStage {
+  position: relative;
+  min-block-size: clamp(31rem, 43vw, 38rem);
+  isolation: isolate;
+}
+
+.stageNumber {
+  position: absolute;
+  inset-block-start: 4%;
+  inset-inline-end: 2%;
+  z-index: -2;
+  color: transparent;
+  font-family: var(--font-en), sans-serif;
+  font-size: clamp(12rem, 23vw, 22rem);
+  font-weight: 700;
+  letter-spacing: -0.12em;
+  line-height: 0.75;
+  -webkit-text-stroke: 1px var(--border);
+  user-select: none;
+}
+
+.stageRail {
+  position: absolute;
+  inset-block: 9% 8%;
+  inset-inline-end: 12%;
+  z-index: -1;
+  inline-size: 1px;
+  background: var(--border);
+}
+
+.stageProgress {
+  position: absolute;
+  inset-block: 9% 8%;
+  inset-inline-end: calc(12% - 1px);
+  z-index: 0;
+  inline-size: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 1rem color-mix(in srgb, var(--accent) 45%, transparent);
+  transform: scaleY(0);
+  transform-origin: top;
+}
+
+:global(html[dir="rtl"]) .stageProgress {
+  transform-origin: bottom;
+}
+
+.stageRail::before,
+.stageRail::after {
+  position: absolute;
+  inset-inline-start: -0.2rem;
+  inline-size: 0.42rem;
+  block-size: 0.42rem;
+  border-radius: 50%;
+  background: var(--accent);
+  content: "";
+}
+
+.stageRail::before {
+  inset-block-start: 16%;
+}
+
+.stageRail::after {
+  inset-block-end: 16%;
+  background: var(--text-primary);
+}
+
+.portraitReveal {
+  position: absolute;
+  inset-block: 0 -2rem;
+  inset-inline: 2% 9%;
+  z-index: 1;
+  overflow: visible;
+  transform-origin: bottom center;
+}
+
+.portrait {
+  inline-size: 100%;
+  block-size: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin: 0;
+  transform-origin: bottom center;
+}
+
+.portrait img {
+  inline-size: auto;
+  max-inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter:
+    drop-shadow(0 2.2rem 2.4rem rgb(0 27 61 / 0.17))
+    drop-shadow(1.1rem 0 0 color-mix(in srgb, var(--accent) 6%, transparent));
+}
+
+.experience {
+  position: absolute;
+  inset-block-end: 1.25rem;
+  inset-inline-start: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  max-inline-size: 13rem;
+  padding: 0.95rem 1rem;
+  background: var(--ink-surface);
+  color: var(--on-primary);
+  box-shadow: 0 1.3rem 3rem -2rem rgb(var(--shadow-rgb) / 0.55);
+}
+
+.experience strong {
+  color: #50b8ff;
+  font-size: 2.7rem;
+  font-weight: 650;
+  letter-spacing: -0.08em;
+  line-height: 0.9;
+}
+
+.experience span {
+  color: rgb(255 255 255 / 0.72);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+@media (max-width: 64rem) {
+  .layout {
+    grid-template-columns: minmax(20rem, 0.9fr) minmax(22rem, 1.1fr);
+    gap: 3rem;
+  }
+
+  .copy h2 {
+    font-size: clamp(2.8rem, 5vw, 4rem);
+  }
+}
+
+@media (max-width: 48rem) {
+  .scrollArtwork {
+    inset-block: 30% -6%;
+    inset-inline: -30%;
+    inline-size: 160%;
+    block-size: 76%;
+    opacity: 0.52;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .copy {
+    max-inline-size: 42rem;
+  }
+
+  .copy h2 {
+    max-inline-size: 13ch;
+    font-size: clamp(3rem, 9vw, 4.6rem);
+  }
+
+  .portraitStage {
+    min-block-size: min(42rem, 112vw);
+  }
+
+  .portraitReveal {
+    inset-inline: 8% 4%;
+  }
+
+  .stageNumber {
+    inset-inline-end: 5%;
+    font-size: clamp(12rem, 46vw, 20rem);
+  }
+}
+
+@media (max-width: 30rem) {
+  .section {
+    padding-block: 4.5rem 3rem;
+  }
+
+  .primarySkill {
+    margin-block-start: 1.5rem;
+  }
+
+  .copy h2 {
+    font-size: clamp(2.45rem, 10.8vw, 3.2rem);
+  }
+
+  .portraitStage {
+    min-block-size: 120vw;
+  }
+
+  .portraitReveal {
+    inset-inline: 0;
+  }
+
+  .experience {
+    inset-block-end: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portrait,
+  .portraitReveal {
+    transform: none !important;
+  }
+
+  .stageProgress {
+    transform: scaleY(1) !important;
+  }
+}

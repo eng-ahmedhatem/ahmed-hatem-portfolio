@@ -1,6 +1,6 @@
 ---
 name: content-data-contracts
-description: Use when defining TypeScript content models, repository interfaces, mock data, project/blog schemas, section configuration, or API-ready frontend data boundaries so Phase 1 can later switch cleanly to Express and MongoDB.
+description: Use when defining TypeScript content models, repository interfaces, mock data, project/blog schemas, section configuration, or API-ready frontend data boundaries so the frontend can switch cleanly to the Express and Supabase repository.
 ---
 
 # Mission
@@ -143,7 +143,7 @@ Exact names may vary.
 
 Design returned data so later implementations can be:
 - MockContentRepository
-- ApiContentRepository
+- ApiContentRepository backed by Express and Supabase
 
 without rewriting presentation components.
 

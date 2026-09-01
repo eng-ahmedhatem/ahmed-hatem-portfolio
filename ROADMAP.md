@@ -55,10 +55,12 @@
 - accessibility pass
 - SEO pass
 
-## Phase 2 — Express + MongoDB CMS
+## Phase 2 — Express + Supabase CMS
 
 - Express app architecture
-- MongoDB models/indexes
+- Supabase PostgreSQL schema, indexes, and RLS
+- Supabase Auth administrator identity
+- Supabase Storage media library
 - auth/session/security
 - admin shell
 - homepage structured section manager with Arabic/English content tabs

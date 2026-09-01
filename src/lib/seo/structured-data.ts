@@ -32,3 +32,46 @@ export function createWebPageStructuredData(
     inLanguage: locale,
   };
 }
+
+export function createHomepageStructuredData(locale: Locale, seo: SeoMetadata, path: string) {
+  const url = absoluteUrl(path);
+  return [
+    createWebPageStructuredData(locale, seo, path),
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "@id": `${url}#person`,
+      name: locale === "ar" ? "أحمد حاتم" : "Ahmed Hatem",
+      url,
+      jobTitle: locale === "ar" ? "مطوّر WordPress ومواقع ويب" : "WordPress & Web Developer",
+      inLanguage: locale,
+    },
+  ];
+}
+
+export function createProjectStructuredData(locale: Locale, seo: SeoMetadata, path: string, image?: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    "@id": `${absoluteUrl(path)}#project`,
+    url: absoluteUrl(path),
+    name: seo.title,
+    description: seo.description,
+    inLanguage: locale,
+    image: image ? absoluteUrl(image) : undefined,
+  };
+}
+
+export function createBlogPostingStructuredData(locale: Locale, seo: SeoMetadata, path: string, publishedAt?: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "@id": `${absoluteUrl(path)}#article`,
+    url: absoluteUrl(path),
+    headline: seo.title,
+    description: seo.description,
+    inLanguage: locale,
+    datePublished: publishedAt,
+    author: { "@type": "Person", name: locale === "ar" ? "أحمد حاتم" : "Ahmed Hatem" },
+  };
+}

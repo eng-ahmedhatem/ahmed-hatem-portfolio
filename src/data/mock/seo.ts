@@ -4,6 +4,7 @@ export function createMockSeo(
   title: string,
   description: string,
   type: NonNullable<SeoMetadata["structuredData"]>["type"] = "WebPage",
+  image?: SeoMetadata["openGraph"]["image"],
 ): SeoMetadata {
   return {
     title,
@@ -15,6 +16,7 @@ export function createMockSeo(
     openGraph: {
       title,
       description,
+      image,
     },
     structuredData: { type },
   };

@@ -1,0 +1,4 @@
+html { background: #07101c; color-scheme: dark; }
+body { min-block-size: 100vh; background: #07101c; font-family: var(--font-ar-body), sans-serif; }
+button, input, textarea, select { font: inherit; }
+::selection { background: rgb(49 180 255 / 0.28); }

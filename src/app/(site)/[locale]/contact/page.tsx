@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
-import { ArticleBody, PageShell } from "@/components/ui/page-shell";
-import { getStaticPageViewModel } from "@/features/site/view-models";
+import { ContactRequest } from "@/components/contact/contact-request";
+import { StructuredData } from "@/components/ui/structured-data";
+import { getContactPageViewModel } from "@/features/site/view-models";
 import { localeFromParam } from "@/lib/i18n/locale-param";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 import { createWebPageStructuredData } from "@/lib/seo/structured-data";
@@ -14,7 +15,7 @@ export async function generateMetadata({
   params,
 }: ContactPageProps): Promise<Metadata> {
   const locale = localeFromParam((await params).locale);
-  const { intro } = await getStaticPageViewModel(locale, "contact");
+  const { intro } = await getContactPageViewModel(locale);
   return createLocalizedMetadata({
     locale,
     seo: intro.seo,
@@ -24,15 +25,13 @@ export async function generateMetadata({
 
 export default async function ContactPage({ params }: ContactPageProps) {
   const locale = localeFromParam((await params).locale);
-  const { intro, body } = await getStaticPageViewModel(locale, "contact");
+  const { intro, contact } = await getContactPageViewModel(locale);
   const path = intro.alternatePaths[locale] ?? `/${locale}/contact`;
 
   return (
-    <PageShell
-      intro={intro}
-      structuredData={createWebPageStructuredData(locale, intro.seo, path)}
-    >
-      <ArticleBody blocks={body} />
-    </PageShell>
+    <main id="main-content">
+      <StructuredData data={createWebPageStructuredData(locale, intro.seo, path)} />
+      <ContactRequest contact={contact} standalone />
+    </main>
   );
 }

@@ -1,0 +1,28 @@
+.route {
+  min-inline-size: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.scrollProgress {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 500;
+  block-size: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 0.8rem rgb(var(--primary-rgb) / 0.5);
+  pointer-events: none;
+  transform-origin: left center;
+}
+
+:global(html[dir="rtl"]) .scrollProgress {
+  transform-origin: right center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrollProgress {
+    box-shadow: none;
+  }
+}

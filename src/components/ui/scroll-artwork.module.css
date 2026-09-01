@@ -1,0 +1,84 @@
+.root {
+  position: absolute;
+  pointer-events: none;
+  overflow: visible;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.canvas {
+  inline-size: 100%;
+  block-size: 100%;
+  display: block;
+  overflow: visible;
+  fill: none;
+}
+
+.primaryTrace,
+.secondaryTrace,
+.detailTrace,
+.orbit {
+  vector-effect: non-scaling-stroke;
+}
+
+.primaryTrace {
+  stroke: color-mix(in srgb, var(--accent) 72%, transparent);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.secondaryTrace {
+  stroke: color-mix(in srgb, var(--secondary-dark) 26%, transparent);
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-dasharray: 3 9;
+}
+
+.detailTrace {
+  stroke: color-mix(in srgb, var(--accent) 38%, transparent);
+  stroke-width: 1;
+  stroke-linecap: square;
+}
+
+.orbit {
+  stroke: color-mix(in srgb, var(--accent) 30%, transparent);
+  stroke-width: 1;
+}
+
+.node,
+.movingNode {
+  fill: var(--accent);
+  stroke: var(--background);
+  stroke-width: 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.quietNode {
+  fill: var(--surface);
+  stroke: color-mix(in srgb, var(--secondary-dark) 44%, transparent);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.movingNode {
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 42%, transparent));
+}
+
+@media (max-width: 48rem) {
+  .secondaryTrace {
+    opacity: 0.65;
+  }
+
+  .detailTrace,
+  .quietNode {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .movingNode {
+    transform: none !important;
+    filter: none;
+  }
+}

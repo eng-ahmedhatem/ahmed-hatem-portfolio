@@ -1,72 +1,83 @@
 .switcher {
-  display: inline-grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  gap: 0.125rem;
-  padding: 0.1875rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-soft);
+  direction: ltr;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  white-space: nowrap;
 }
 
 .switcher a {
-  min-block-size: 2.375rem;
-  min-inline-size: 4.35rem;
+  position: relative;
+  min-block-size: 2.75rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding-block: 0.4rem;
-  padding-inline: 0.65rem;
-  border: 1px solid transparent;
-  border-radius: calc(var(--radius-sm) - 3px);
-  color: var(--text-secondary);
-  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
   font-weight: 700;
-  line-height: 1;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: transform var(--duration-instant) var(--ease-premium);
+  transition: color var(--duration-fast) var(--ease-premium);
   touch-action: manipulation;
-  -webkit-tap-highlight-color: rgb(12 183 181 / 0.12);
+  -webkit-tap-highlight-color: rgb(0 120 248 / 0.14);
 }
 
-.switcher a:hover {
-  color: var(--text-primary);
+.switcher a + a::before {
+  position: absolute;
+  inset-inline-start: -0.42rem;
+  color: var(--border);
+  content: "/";
 }
 
-.switcher a:active {
-  transform: scale(0.975);
+.switcher a::after {
+  position: absolute;
+  inset-block-end: 0.28rem;
+  inset-inline: 0;
+  block-size: 1px;
+  background: var(--accent);
+  content: "";
+  transform: scaleX(0);
+  transition: transform var(--duration-fast) var(--ease-premium);
 }
 
+.switcher a:hover,
 .switcher a[aria-current="page"] {
-  border-color: var(--border);
-  background: var(--surface);
   color: var(--text-primary);
-  box-shadow: 0 4px 12px -10px rgb(15 23 42 / 0.55);
 }
 
-.switcher[data-variant="panel"] {
-  inline-size: 100%;
-}
-
-.switcher[data-variant="panel"] a {
-  min-block-size: 3rem;
-  font-size: 0.82rem;
+.switcher a:hover::after,
+.switcher a[aria-current="page"]::after {
+  transform: scaleX(1);
 }
 
 .switcher a:focus-visible {
-  position: relative;
-  z-index: 1;
-  outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline: 3px solid color-mix(in srgb, var(--accent) 60%, var(--text-primary));
   outline-offset: 2px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .switcher a {
-    transition-duration: 0.01ms;
-  }
+.switcher[data-variant="panel"] {
+  min-block-size: 3.25rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-block: 1px solid var(--border);
+}
 
-  .switcher a:active {
-    transform: none;
+.switcher[data-variant="panel"] a {
+  min-block-size: 3.25rem;
+  font-size: var(--text-sm);
+}
+
+.switcher[data-variant="panel"] a + a::before {
+  display: none;
+}
+
+.switcher[data-variant="panel"] a::after {
+  inset-block-end: -1px;
+  inset-inline: 24%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switcher a,
+  .switcher a::after {
+    transition-duration: 0.01ms;
   }
 }

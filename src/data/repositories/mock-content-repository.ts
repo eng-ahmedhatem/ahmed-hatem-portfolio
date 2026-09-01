@@ -2,6 +2,7 @@ import type { ContentRepository } from "@/domain/content/repositories";
 import type {
   BlogCategory,
   BlogPost,
+  Homepage,
   Locale,
   LocalizedRouteEntry,
   Project,
@@ -11,6 +12,7 @@ import type {
   ResolvedProject,
   ResolvedSiteSettings,
   ResolvedStaticPage,
+  SiteSettings,
   StaticPage,
   TranslationState,
 } from "@/domain/content/types";
@@ -22,6 +24,24 @@ import { mockStaticPages } from "../mock/pages";
 import { mockPosts } from "../mock/posts";
 import { mockProjects } from "../mock/projects";
 import { mockSiteSettings } from "../mock/site-settings";
+
+export interface ContentSnapshot {
+  siteSettings: SiteSettings;
+  homepage: Homepage;
+  staticPages: readonly StaticPage[];
+  projects: readonly Project[];
+  posts: readonly BlogPost[];
+  categories: readonly BlogCategory[];
+}
+
+const mockSnapshot: ContentSnapshot = {
+  siteSettings: mockSiteSettings,
+  homepage: mockHomepage,
+  staticPages: mockStaticPages,
+  projects: mockProjects,
+  posts: mockPosts,
+  categories: mockCategories,
+};
 
 function requireTranslation<T>(
   translations: TranslationState<T>,
@@ -75,7 +95,7 @@ function categoryPaths(category: BlogCategory): TranslationState<string> {
 function resolveProject(project: Project, locale: Locale): ResolvedProject | null {
   const translation = project.translations[locale];
 
-  if (!translation) {
+  if (!translation || project.status === "draft") {
     return null;
   }
 
@@ -130,30 +150,32 @@ function resolveCategory(
 }
 
 export class MockContentRepository implements ContentRepository {
+  constructor(private readonly snapshot: ContentSnapshot = mockSnapshot) {}
+
   async getSiteSettings(locale: Locale): Promise<ResolvedSiteSettings> {
     const translation = requireTranslation(
-      mockSiteSettings.translations,
+      this.snapshot.siteSettings.translations,
       locale,
       "site settings",
     );
 
     return {
       ...translation,
-      id: mockSiteSettings.id,
+      id: this.snapshot.siteSettings.id,
       locale,
       direction: getDirection(locale),
-      identity: mockSiteSettings.identity,
+      identity: this.snapshot.siteSettings.identity,
     };
   }
 
   async getHomepage(locale: Locale): Promise<ResolvedHomepage> {
     const translation = requireTranslation(
-      mockHomepage.translations,
+      this.snapshot.homepage.translations,
       locale,
       "homepage",
     );
 
-    const sections = mockHomepage.sections
+    const sections = this.snapshot.homepage.sections
       .filter((section) => section.enabled && section.translations[locale])
       .sort((first, second) => first.order - second.order)
       .map((section) => ({
@@ -169,15 +191,16 @@ export class MockContentRepository implements ContentRepository {
 
     return {
       ...translation,
-      id: mockHomepage.id,
+      id: this.snapshot.homepage.id,
       locale,
+      actions: this.snapshot.homepage.actions,
       sections,
       alternatePaths: { ar: "/ar", en: "/en" },
     };
   }
 
   async getProjects(locale: Locale): Promise<readonly ResolvedProject[]> {
-    return mockProjects.flatMap((project) => {
+    return this.snapshot.projects.flatMap((project) => {
       const resolved = resolveProject(project, locale);
       return resolved ? [resolved] : [];
     });
@@ -200,7 +223,7 @@ export class MockContentRepository implements ContentRepository {
     slug: string,
   ): Promise<ResolvedProject | null> {
     const normalizedSlug = decodeSlug(slug);
-    const project = mockProjects.find(
+    const project = this.snapshot.projects.find(
       (candidate) => candidate.translations[locale]?.slug === normalizedSlug,
     );
 
@@ -208,7 +231,7 @@ export class MockContentRepository implements ContentRepository {
   }
 
   async getPosts(locale: Locale): Promise<readonly ResolvedBlogPost[]> {
-    return mockPosts.flatMap((post) => {
+    return this.snapshot.posts.flatMap((post) => {
       const resolved = resolvePost(post, locale);
       return resolved ? [resolved] : [];
     });
@@ -219,7 +242,7 @@ export class MockContentRepository implements ContentRepository {
     slug: string,
   ): Promise<ResolvedBlogPost | null> {
     const normalizedSlug = decodeSlug(slug);
-    const post = mockPosts.find(
+    const post = this.snapshot.posts.find(
       (candidate) => candidate.translations[locale]?.slug === normalizedSlug,
     );
 
@@ -229,7 +252,7 @@ export class MockContentRepository implements ContentRepository {
   async getCategories(
     locale: Locale,
   ): Promise<readonly ResolvedBlogCategory[]> {
-    return mockCategories.flatMap((category) => {
+    return this.snapshot.categories.flatMap((category) => {
       const resolved = resolveCategory(category, locale);
       return resolved ? [resolved] : [];
     });
@@ -240,7 +263,7 @@ export class MockContentRepository implements ContentRepository {
     slug: string,
   ): Promise<ResolvedBlogCategory | null> {
     const normalizedSlug = decodeSlug(slug);
-    const category = mockCategories.find(
+    const category = this.snapshot.categories.find(
       (candidate) => candidate.translations[locale]?.slug === normalizedSlug,
     );
 
@@ -259,7 +282,7 @@ export class MockContentRepository implements ContentRepository {
     locale: Locale,
     key: StaticPage["key"],
   ): Promise<ResolvedStaticPage> {
-    const page = mockStaticPages.find((candidate) => candidate.key === key);
+    const page = this.snapshot.staticPages.find((candidate) => candidate.key === key);
 
     if (!page) {
       throw new Error(`Missing static page: ${key}.`);
@@ -305,12 +328,6 @@ export class MockContentRepository implements ContentRepository {
         fallbackPaths: { ar: "/ar/blog", en: "/en/blog" },
       },
       {
-        id: "route-about",
-        kind: "about",
-        paths: { ar: "/ar/about", en: "/en/about" },
-        fallbackPaths: { ar: "/ar/about", en: "/en/about" },
-      },
-      {
         id: "route-contact",
         kind: "contact",
         paths: { ar: "/ar/contact", en: "/en/contact" },
@@ -318,15 +335,17 @@ export class MockContentRepository implements ContentRepository {
       },
     ];
 
-    const projectRoutes = mockProjects.map<LocalizedRouteEntry>((project) => ({
-      id: `route-${project.id}`,
-      kind: "project",
-      paths: projectPaths(project),
-      fallbackPaths: { ar: "/ar/work", en: "/en/work" },
-      lastModified: project.updatedAt,
-    }));
+    const projectRoutes = this.snapshot.projects
+      .filter((project) => project.status !== "draft")
+      .map<LocalizedRouteEntry>((project) => ({
+        id: `route-${project.id}`,
+        kind: "project",
+        paths: projectPaths(project),
+        fallbackPaths: { ar: "/ar/work", en: "/en/work" },
+        lastModified: project.updatedAt,
+      }));
 
-    const postRoutes = mockPosts
+    const postRoutes = this.snapshot.posts
       .filter((post) => post.status === "published")
       .map<LocalizedRouteEntry>((post) => ({
         id: `route-${post.id}`,
@@ -336,7 +355,7 @@ export class MockContentRepository implements ContentRepository {
         lastModified: post.updatedAt,
       }));
 
-    const categoryRoutes = mockCategories.map<LocalizedRouteEntry>((category) => ({
+    const categoryRoutes = this.snapshot.categories.map<LocalizedRouteEntry>((category) => ({
       id: `route-${category.id}`,
       kind: "category",
       paths: categoryPaths(category),
@@ -348,6 +367,6 @@ export class MockContentRepository implements ContentRepository {
   }
 
   async getPublishedPostEntities(): Promise<readonly BlogPost[]> {
-    return mockPosts.filter((post) => post.status === "published");
+    return this.snapshot.posts.filter((post) => post.status === "published");
   }
 }

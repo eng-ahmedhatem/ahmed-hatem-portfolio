@@ -21,11 +21,16 @@ export function SiteHeader({ settings, routes }: SiteHeaderProps) {
     <SiteHeaderClient
       locale={settings.locale}
       brandName={settings.brandName}
-      brandDescriptor={settings.brandDescriptor}
+      logoSrc={settings.identity.logoSrc}
+      logoWidth={settings.identity.logoWidth}
+      logoHeight={settings.identity.logoHeight}
       navigationLabel={settings.navigationLabel}
       navigation={settings.navigation.filter((item) => item.key !== "contact")}
       skipToContentLabel={settings.skipToContentLabel}
       languageSwitcherLabel={settings.languageSwitcherLabel}
+      themeSwitcherLabel={settings.themeSwitcherLabel}
+      lightThemeLabel={settings.lightThemeLabel}
+      darkThemeLabel={settings.darkThemeLabel}
       mobileMenuOpenLabel={settings.mobileMenuOpenLabel}
       mobileMenuCloseLabel={settings.mobileMenuCloseLabel}
       mobileMenuLabel={settings.mobileMenuLabel}

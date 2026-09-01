@@ -3,7 +3,6 @@ export const SUPPORTED_LOCALES = ["ar", "en"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 export type Direction = "rtl" | "ltr";
 export type TranslationState<T> = Partial<Record<Locale, T>>;
-
 export type PageKey = "home" | "work" | "blog" | "about" | "contact";
 
 export interface SeoRobots {
@@ -29,7 +28,12 @@ export interface SeoMetadata {
     image?: OpenGraphImage;
   };
   structuredData?: {
-    type: "WebPage" | "Article" | "ProfilePage";
+    type:
+      | "WebPage"
+      | "ProfilePage"
+      | "BlogPosting"
+      | "CollectionPage"
+      | "CreativeWork";
   };
 }
 
@@ -46,12 +50,18 @@ export interface SiteSettingsTranslation {
   navigation: readonly NavigationItem[];
   skipToContentLabel: string;
   languageSwitcherLabel: string;
+  themeSwitcherLabel: string;
+  lightThemeLabel: string;
+  darkThemeLabel: string;
   mobileMenuOpenLabel: string;
   mobileMenuCloseLabel: string;
   mobileMenuLabel: string;
   mobileMenuTitle: string;
   primaryCtaLabel: string;
-  footerSummary: string;
+  contactDockLabel: string;
+  whatsappLabel: string;
+  facebookLabel: string;
+  footerRole: string;
   footerNavigationLabel: string;
   copyrightLabel: string;
   seo: SeoMetadata;
@@ -60,7 +70,13 @@ export interface SiteSettingsTranslation {
 export interface SiteSettings {
   id: string;
   identity: {
-    email: string;
+    email?: string;
+    logoSrc?: string;
+    logoWidth?: number;
+    logoHeight?: number;
+    profileSrc?: string;
+    profileWidth?: number;
+    profileHeight?: number;
     socialLinks: readonly {
       id: string;
       label: string;
@@ -78,20 +94,9 @@ export interface ResolvedSiteSettings extends SiteSettingsTranslation {
 }
 
 export type HomepageSectionType =
-  | "foundation-intro"
   | "hero"
-  | "credibility"
-  | "services"
   | "featured-projects"
-  | "positioning"
-  | "automation"
-  | "process"
-  | "lab"
-  | "capabilities"
-  | "proof"
-  | "testimonials"
   | "about-preview"
-  | "latest-articles"
   | "contact-cta";
 
 export interface HomepageSectionTranslation {
@@ -108,15 +113,98 @@ export interface HomepageSection {
   translations: TranslationState<HomepageSectionTranslation>;
 }
 
+export const HERO_BUILD_STEP_KEYS = [
+  "structure",
+  "design",
+  "wordpress",
+  "custom",
+  "responsive",
+  "quality",
+  "launch",
+] as const;
+
+export type HeroBuildStepKey = (typeof HERO_BUILD_STEP_KEYS)[number];
+
+export interface HeroBlueprintTranslation {
+  ariaLabel: string;
+  canvasLabel: string;
+  progressLabel: string;
+  liveLabel: string;
+  steps: Record<
+    HeroBuildStepKey,
+    {
+      label: string;
+      detail: string;
+    }
+  >;
+}
+
+export interface ContactFormTranslation {
+  nameLabel: string;
+  emailLabel: string;
+  phoneLabel: string;
+  phoneOptionalLabel: string;
+  serviceLabel: string;
+  budgetLabel: string;
+  budgetOptionalLabel: string;
+  detailsLabel: string;
+  contactMethodLabel: string;
+  contactMethodOptionalLabel: string;
+  submitLabel: string;
+  requiredLabel: string;
+  invalidEmailLabel: string;
+  deliverySuccessLabel: string;
+  deliveryUnavailableLabel: string;
+  services: readonly { value: string; label: string }[];
+  budgets: readonly { value: string; label: string }[];
+  contactMethods: readonly { value: string; label: string }[];
+}
+
 export interface HomepageTranslation {
-  title: string;
-  eyebrow: string;
-  summary: string;
+  hero: {
+    name: string;
+    role: string;
+    eyebrow: string;
+    title: string;
+    summary: string;
+    primaryActionLabel: string;
+    secondaryActionLabel: string;
+    capabilityLabel: string;
+    capabilities: readonly string[];
+    blueprint: HeroBlueprintTranslation;
+  };
+  projects: {
+    viewProjectLabel: string;
+    projectLabel: string;
+    progressLabel: string;
+    viewAllLabel: string;
+  };
+  about: {
+    experienceNumber: string;
+    experienceUnit: string;
+    title: string;
+    summary: string;
+    details: readonly string[];
+    primarySkill: string;
+    secondarySkills: readonly string[];
+    profileAlt: string;
+    actionLabel: string;
+  };
+  contact: {
+    title: string;
+    summary: string;
+    emailLabel: string;
+    form: ContactFormTranslation;
+  };
   seo: SeoMetadata;
 }
 
 export interface Homepage {
   id: string;
+  actions: {
+    primaryTarget: PageKey;
+    secondaryTarget: PageKey;
+  };
   translations: TranslationState<HomepageTranslation>;
   sections: readonly HomepageSection[];
 }
@@ -124,6 +212,7 @@ export interface Homepage {
 export interface ResolvedHomepage extends HomepageTranslation {
   id: string;
   locale: Locale;
+  actions: Homepage["actions"];
   sections: readonly (HomepageSectionTranslation & {
     id: string;
     type: HomepageSectionType;
@@ -137,38 +226,43 @@ export interface MediaAsset {
   src: string;
   width: number;
   height: number;
-  translations: TranslationState<{ alt: string }>;
+  translations: TranslationState<{
+    alt: string;
+    caption?: string;
+  }>;
 }
 
 export interface ProjectTranslation {
   title: string;
   slug: string;
   excerpt: string;
-  overview: string;
-  challenge: string;
-  solution: string;
-  process: readonly string[];
-  architecture: string;
-  automation: string;
-  results: readonly string[];
-  role: string;
-  industry: string;
+  overview?: string;
+  challenge?: string;
+  solution?: string;
+  role?: string;
+  projectType: string;
+  filterLabel: string;
   seo: SeoMetadata;
 }
 
 export interface Project {
   id: string;
-  year: number;
+  status?: "draft" | "published";
+  implementationDate?: string;
   technologies: readonly string[];
+  filterKey: string;
   featured: boolean;
   featuredOrder?: number;
   links: readonly { label: string; url: string }[];
   media: readonly MediaAsset[];
+  coverMediaId: string;
   translations: TranslationState<ProjectTranslation>;
   updatedAt: string;
 }
 
-export interface ResolvedProject extends Omit<Project, "translations">, ProjectTranslation {
+export interface ResolvedProject
+  extends Omit<Project, "translations">,
+    ProjectTranslation {
   locale: Locale;
   alternatePaths: TranslationState<string>;
 }
@@ -177,7 +271,6 @@ export interface BlogCategoryTranslation {
   name: string;
   slug: string;
   description: string;
-  imageAlt?: string;
   seo: SeoMetadata;
 }
 
@@ -197,14 +290,35 @@ export interface ResolvedBlogCategory
 export type ContentBlock =
   | { id: string; type: "paragraph"; text: string }
   | { id: string; type: "heading"; level: 2 | 3; text: string }
-  | { id: string; type: "list"; items: readonly string[] };
+  | { id: string; type: "list"; items: readonly string[]; ordered?: boolean }
+  | { id: string; type: "quote"; text: string; attribution?: string }
+  | { id: string; type: "code"; code: string; language?: string }
+  | {
+      id: string;
+      type: "image";
+      src: string;
+      width: number;
+      height: number;
+      alt: string;
+      caption?: string;
+    }
+  | {
+      id: string;
+      type: "links";
+      links: readonly { label: string; href: string }[];
+    }
+  | {
+      id: string;
+      type: "table";
+      headers: readonly string[];
+      rows: readonly (readonly string[])[];
+    };
 
 export interface BlogPostTranslation {
   title: string;
   slug: string;
   excerpt: string;
   content: readonly ContentBlock[];
-  featuredImageAlt?: string;
   seo: SeoMetadata;
 }
 
@@ -212,7 +326,10 @@ export interface BlogPost {
   id: string;
   authorId: string;
   categoryIds: readonly string[];
+  tags: readonly string[];
   status: "draft" | "published";
+  featured?: boolean;
+  featuredImage: MediaAsset;
   publishedAt?: string;
   updatedAt: string;
   translations: TranslationState<BlogPostTranslation>;
