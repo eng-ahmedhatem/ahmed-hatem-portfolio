@@ -111,6 +111,53 @@ function TextField({
   );
 }
 
+function normalizeMachineKey(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9_-]/g, "")
+    .replace(/-{2,}/g, "-")
+    .replace(/^[-_]+/g, "");
+}
+
+function MachineKeyField({
+  payload,
+  path,
+  label,
+  onChange,
+}: {
+  payload: JsonObject;
+  path: string[];
+  label: string;
+  onChange: (payload: JsonObject) => void;
+}) {
+  const value = asString(getAt(payload, path));
+  const isValid = /^[a-zA-Z0-9_-]+$/.test(value);
+
+  return (
+    <label>
+      <span>
+        {label}
+        <small>حروف إنجليزية وأرقام و- أو _ فقط</small>
+      </span>
+      <input
+        type="text"
+        dir="ltr"
+        inputMode="text"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        pattern="[A-Za-z0-9_-]+"
+        aria-invalid={value.length > 0 && !isValid}
+        value={value}
+        onChange={(event) =>
+          onChange(setAt(payload, path, normalizeMachineKey(event.target.value)))
+        }
+      />
+    </label>
+  );
+}
+
 function NumberField({ payload, path, label, onChange, min = 0 }: { payload: JsonObject; path: string[]; label: string; onChange: (payload: JsonObject) => void; min?: number }) {
   const value = getAt(payload, path);
   return <label><span>{label}</span><input type="number" min={min} value={typeof value === "number" ? value : ""} onChange={(event) => onChange(setAt(payload, path, event.target.value === "" ? undefined : Number(event.target.value)))} /></label>;
@@ -457,7 +504,7 @@ export function AdminContentEditor({ record, records, onChange }: { record: Admi
 
   if (record.kind === "static-page") return <div className={styles.editorPanel}><LocaleTabs value={locale} onChange={setLocale} /><EditorSection eyebrow="PAGE" title="محتوى الصفحة"><TextField payload={payload} path={[...translationBase, "eyebrow"]} label="العنوان التمهيدي" locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "title"]} label="عنوان الصفحة" area locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "summary"]} label="ملخص الصفحة" area locale={locale} onChange={updatePayload} /><ContentBlocksEditor payload={payload} path={[...translationBase, "body"]} locale={locale} onChange={updatePayload} /></EditorSection><SeoFields payload={payload} base={translationBase} locale={locale} onChange={updatePayload} /></div>;
 
-  if (record.kind === "project") return <div className={styles.editorPanel}><EditorSection eyebrow="STATUS" title="النشر والظهور"><SelectField payload={payload} path={["status"]} label="حالة المشروع" options={[["draft", "مسودة"], ["published", "منشور"]]} onChange={updatePayload} /><ToggleField payload={payload} path={["featured"]} label="عرض في الصفحة الرئيسية" description="يظهر فقط عندما يكون المشروع منشورًا" onChange={updatePayload} /><NumberField payload={payload} path={["featuredOrder"]} label="ترتيب الظهور في الهوم" min={1} onChange={updatePayload} /><TextField payload={payload} path={["implementationDate"]} label="تاريخ التنفيذ" type="date" onChange={updatePayload} /><TextField payload={payload} path={["filterKey"]} label="مفتاح التصنيف" onChange={updatePayload} /><ListField payload={payload} path={["technologies"]} label="التقنيات" onChange={updatePayload} /><ProjectLinksEditor payload={payload} onChange={updatePayload} /></EditorSection><LocaleTabs value={locale} onChange={setLocale} /><EditorSection eyebrow="CONTENT" title="بيانات المشروع"><TextField payload={payload} path={[...translationBase, "title"]} label="اسم المشروع" locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "slug"]} label="الرابط المختصر" locale="en" onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "projectType"]} label="نوع المشروع" locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "filterLabel"]} label="اسم التصنيف" locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "role"]} label="دوري في المشروع" locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "excerpt"]} label="الوصف المختصر" area locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "overview"]} label="نظرة عامة" area locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "challenge"]} label="التحدي" area locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "solution"]} label="الحل" area locale={locale} onChange={updatePayload} /></EditorSection><MediaGalleryEditor payload={payload} locale={locale} onChange={updatePayload} /><SeoFields payload={payload} base={translationBase} locale={locale} onChange={updatePayload} /></div>;
+  if (record.kind === "project") return <div className={styles.editorPanel}><EditorSection eyebrow="STATUS" title="النشر والظهور"><SelectField payload={payload} path={["status"]} label="حالة المشروع" options={[["draft", "مسودة"], ["published", "منشور"]]} onChange={updatePayload} /><ToggleField payload={payload} path={["featured"]} label="عرض في الصفحة الرئيسية" description="يظهر فقط عندما يكون المشروع منشورًا" onChange={updatePayload} /><NumberField payload={payload} path={["featuredOrder"]} label="ترتيب الظهور في الهوم" min={1} onChange={updatePayload} /><TextField payload={payload} path={["implementationDate"]} label="تاريخ التنفيذ" type="date" onChange={updatePayload} /><MachineKeyField payload={payload} path={["filterKey"]} label="مفتاح التصنيف" onChange={updatePayload} /><ListField payload={payload} path={["technologies"]} label="التقنيات" onChange={updatePayload} /><ProjectLinksEditor payload={payload} onChange={updatePayload} /></EditorSection><LocaleTabs value={locale} onChange={setLocale} /><EditorSection eyebrow="CONTENT" title="بيانات المشروع"><TextField payload={payload} path={[...translationBase, "title"]} label="اسم المشروع" locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "slug"]} label="الرابط المختصر" locale="en" onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "projectType"]} label="نوع المشروع" locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "filterLabel"]} label="اسم التصنيف" locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "role"]} label="دوري في المشروع" locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "excerpt"]} label="الوصف المختصر" area locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "overview"]} label="نظرة عامة" area locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "challenge"]} label="التحدي" area locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "solution"]} label="الحل" area locale={locale} onChange={updatePayload} /></EditorSection><MediaGalleryEditor payload={payload} locale={locale} onChange={updatePayload} /><SeoFields payload={payload} base={translationBase} locale={locale} onChange={updatePayload} /></div>;
 
   if (record.kind === "post") return <div className={styles.editorPanel}><EditorSection eyebrow="STATUS" title="النشر والتصنيف"><SelectField payload={payload} path={["status"]} label="حالة المقال" options={[["draft", "مسودة"], ["published", "منشور"]]} onChange={updatePayload} /><ToggleField payload={payload} path={["featured"]} label="مقال مميز" onChange={updatePayload} /><TextField payload={payload} path={["publishedAt"]} label="تاريخ النشر بصيغة ISO" hint="مثال: 2026-09-01T12:00:00.000Z" onChange={updatePayload} /><ListField payload={payload} path={["tags"]} label="الوسوم" onChange={updatePayload} /><CategoryPicker payload={payload} records={records} onChange={updatePayload} /><ImageField payload={payload} path={["featuredImage", "src"]} widthPath={["featuredImage", "width"]} heightPath={["featuredImage", "height"]} label="صورة المقال" onChange={updatePayload} /></EditorSection><LocaleTabs value={locale} onChange={setLocale} /><EditorSection eyebrow="ARTICLE" title="محتوى المقال"><TextField payload={payload} path={[...translationBase, "title"]} label="عنوان المقال" area locale={locale} onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "slug"]} label="الرابط المختصر" locale="en" onChange={updatePayload} /><TextField payload={payload} path={[...translationBase, "excerpt"]} label="مقتطف المقال" area locale={locale} onChange={updatePayload} /><TextField payload={payload} path={["featuredImage", "translations", locale, "alt"]} label="النص البديل لصورة المقال" locale={locale} onChange={updatePayload} /><TextField payload={payload} path={["featuredImage", "translations", locale, "caption"]} label="تعليق الصورة" locale={locale} onChange={updatePayload} /><ContentBlocksEditor payload={payload} path={[...translationBase, "content"]} locale={locale} onChange={updatePayload} /></EditorSection><SeoFields payload={payload} base={translationBase} locale={locale} onChange={updatePayload} /></div>;
 

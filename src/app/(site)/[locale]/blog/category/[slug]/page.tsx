@@ -19,6 +19,8 @@ interface CategoryPageProps {
   }>;
 }
 
+export const dynamicParams = true;
+
 export async function generateStaticParams() {
   const localizedCategories = await Promise.all(
     SUPPORTED_LOCALES.map(async (locale) => ({

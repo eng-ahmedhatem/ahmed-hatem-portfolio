@@ -1,10 +1,40 @@
 import { handleCmsRequest } from "@server/cms-handler";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+
+import { CONTENT_SNAPSHOT_CACHE_TAG } from "@/data/content-cache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type CmsContext = { params: Promise<{ path: string[] }> };
+
+type SavedRecord = {
+  kind?: string;
+  payload?: {
+    key?: string;
+    translations?: Partial<Record<"ar" | "en", { slug?: string }>>;
+  };
+};
+
+function revalidateContentRoutes(kind: string | undefined, record?: SavedRecord) {
+  revalidateTag(CONTENT_SNAPSHOT_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/sitemap.xml");
+
+  for (const locale of ["ar", "en"] as const) {
+    revalidatePath(`/${locale}`);
+    if (kind === "project") revalidatePath(`/${locale}/work`);
+    if (kind === "post" || kind === "category") revalidatePath(`/${locale}/blog`);
+
+    const slug = record?.payload?.translations?.[locale]?.slug;
+    if (kind === "project" && slug) revalidatePath(`/${locale}/work/${slug}`);
+    if (kind === "post" && slug) revalidatePath(`/${locale}/blog/${slug}`);
+    if (kind === "category" && slug) revalidatePath(`/${locale}/blog/category/${slug}`);
+    if (kind === "static-page" && record?.payload?.key) {
+      revalidatePath(`/${locale}/${record.payload.key}`);
+    }
+  }
+}
 
 async function dispatch(request: Request, context: CmsContext) {
   try {
@@ -16,8 +46,12 @@ async function dispatch(request: Request, context: CmsContext) {
       && path[0] === "admin"
       && path[1] === "content"
     ) {
-      revalidatePath("/", "layout");
-      revalidatePath("/sitemap.xml");
+      let savedRecord: SavedRecord | undefined;
+      if (request.method === "PUT") {
+        const body = (await response.clone().json().catch(() => null)) as { record?: SavedRecord } | null;
+        savedRecord = body?.record;
+      }
+      revalidateContentRoutes(path[2], savedRecord);
     }
     return response;
   } catch (error) {

@@ -255,6 +255,8 @@ export function LatestProjects({ projects }: LatestProjectsProps) {
               />
               <motion.circle
                 className={styles.dataPulse}
+                cx="500"
+                cy="235"
                 r="5"
                 style={{ opacity: reduce ? 0.75 : pulseOpacity }}
                 animate={

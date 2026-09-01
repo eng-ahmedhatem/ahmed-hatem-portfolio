@@ -14,6 +14,8 @@ interface BlogPostPageProps {
   params: Promise<{ locale: string; slug: string }>;
 }
 
+export const dynamicParams = true;
+
 export async function generateStaticParams() {
   const localizedPosts = await Promise.all(
     SUPPORTED_LOCALES.map(async (locale) => ({

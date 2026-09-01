@@ -10,7 +10,15 @@ import { mockSiteSettings } from "../src/data/mock/site-settings";
 import { type ContentKind } from "./models";
 import { getSupabaseAdmin, isDatabaseReady } from "./supabase";
 
-const idSchema = z.string().min(1).max(160).regex(/^[a-zA-Z0-9_-]+$/);
+const idSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(160)
+  .regex(
+    /^[a-zA-Z0-9_-]+$/,
+    "استخدم حروفًا إنجليزية أو أرقامًا أو الشرطة (-) والشرطة السفلية (_) فقط.",
+  );
 const shortText = z.string().trim().min(1).max(320);
 const longText = z.string().max(20_000);
 const dateSchema = z.string().datetime({ offset: true });

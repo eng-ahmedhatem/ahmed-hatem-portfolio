@@ -1,22 +1,32 @@
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
+
+import { CONTENT_SNAPSHOT_CACHE_TAG } from "@/data/content-cache";
 import { MockContentRepository, type ContentSnapshot } from "@/data/repositories/mock-content-repository";
 import type { ContentRepository } from "@/domain/content/repositories";
 import type { Locale, StaticPage } from "@/domain/content/types";
 import { ensureBackendReady } from "@server/backend";
 import { getBundledSnapshot, getPublicSnapshot } from "@server/content";
 
+const getCachedPublicSnapshot = unstable_cache(
+  getPublicSnapshot,
+  ["portfolio-public-content"],
+  { tags: [CONTENT_SNAPSHOT_CACHE_TAG], revalidate: 3600 },
+);
+
 async function fetchSnapshot(): Promise<ContentSnapshot> {
-  if (!(await ensureBackendReady())) return getBundledSnapshot();
   try {
-    return await getPublicSnapshot();
+    if (!(await ensureBackendReady())) return getBundledSnapshot();
+    return await getCachedPublicSnapshot();
   } catch (error) {
-    console.error("Supabase content read failed; using bundled content.", error);
+    console.error("Supabase content is temporarily unavailable; using bundled content.", error);
     return getBundledSnapshot();
   }
 }
 
-async function repository(): Promise<MockContentRepository> {
+const repository = cache(async (): Promise<MockContentRepository> => {
   return new MockContentRepository(await fetchSnapshot());
-}
+});
 
 export class ApiContentRepository implements ContentRepository {
   async getSiteSettings(locale: Locale) { return (await repository()).getSiteSettings(locale); }

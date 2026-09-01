@@ -122,13 +122,6 @@ export function SiteHeaderClient({
 
     const body = document.body;
     const previousOverflow = body.style.overflow;
-    const obscuredElements = Array.from(
-      document.querySelectorAll<HTMLElement>("main, body > footer"),
-    ).map((element) => ({
-      element,
-      wasInert: element.inert,
-      ariaHidden: element.getAttribute("aria-hidden"),
-    }));
     const focusFrame = window.requestAnimationFrame(() => {
       mobilePanelRef.current
         ?.querySelector<HTMLElement>("[data-menu-initial-focus]")
@@ -136,10 +129,6 @@ export function SiteHeaderClient({
     });
 
     body.style.overflow = "hidden";
-    obscuredElements.forEach(({ element }) => {
-      element.inert = true;
-      element.setAttribute("aria-hidden", "true");
-    });
 
     function restoreMenuButtonFocus() {
       window.requestAnimationFrame(() => menuButtonRef.current?.focus());
@@ -198,14 +187,6 @@ export function SiteHeaderClient({
     return () => {
       window.cancelAnimationFrame(focusFrame);
       body.style.overflow = previousOverflow;
-      obscuredElements.forEach(({ element, wasInert, ariaHidden }) => {
-        element.inert = wasInert;
-        if (ariaHidden === null) {
-          element.removeAttribute("aria-hidden");
-        } else {
-          element.setAttribute("aria-hidden", ariaHidden);
-        }
-      });
       document.removeEventListener("keydown", handleKeyDown);
       desktopBreakpoint.removeEventListener("change", handleDesktopBreakpoint);
     };
@@ -256,7 +237,7 @@ export function SiteHeaderClient({
                 src={logoSrc}
                 width={logoWidth}
                 height={logoHeight}
-                sizes="(max-width: 1023px) 144px, 180px"
+                sizes="(max-width: 1023px) 192px, 180px"
                 alt={brandName}
                 loading="eager"
               />

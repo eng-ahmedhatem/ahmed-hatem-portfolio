@@ -22,6 +22,7 @@
   position: sticky;
   inset-block-start: 0;
   z-index: 100;
+  isolation: isolate;
   border-block-end: 1px solid transparent;
   border-block-end-color: var(--glass-border);
   background: var(--glass-surface);
@@ -61,6 +62,8 @@
 
 .inner,
 .header[data-scrolled="true"] .inner {
+  position: relative;
+  z-index: 2;
   min-block-size: 5.25rem;
   display: flex;
   align-items: center;
@@ -429,14 +432,19 @@
   }
 
   .mobilePanel {
-    position: fixed;
-    inset-block: 4.5rem 0;
+    position: absolute;
+    inset-block-start: 100%;
     inset-inline: 0;
-    z-index: -1;
+    z-index: 1;
+    block-size: calc(100dvh - 4.5rem);
     display: block;
     overflow-y: auto;
     overscroll-behavior: contain;
     background: var(--background);
+  }
+
+  .brandLogo {
+    inline-size: clamp(10.5rem, 43vw, 12rem);
   }
 
   .mobilePanelInner {
@@ -552,6 +560,12 @@
 
   .mobileUtilities > :last-child {
     grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 23.5rem) {
+  .brandLogo {
+    inline-size: 9.5rem;
   }
 }
 

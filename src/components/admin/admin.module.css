@@ -21,6 +21,10 @@
 .adminMark { position: relative; inline-size: 3.2rem; block-size: 3.2rem; display: grid; place-items: center; border: 1px solid rgb(49 180 255 / 0.35); color: #f1f6fc; font: 700 var(--text-sm)/1 var(--font-en); letter-spacing: -0.05em; }
 .adminMark::before { content: ""; position: absolute; inset: 0.36rem; border-block-start: 1px solid #31b4ff; border-inline-end: 1px solid #31b4ff; }
 .adminMark i { position: absolute; inset-block-end: -0.2rem; inset-inline-end: -0.2rem; inline-size: 0.48rem; block-size: 0.48rem; border: 2px solid #07101c; border-radius: 50%; background: #31b4ff; }
+.adminLogoFrame { inline-size: 10.5rem; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; padding: 0.35rem 0.45rem; border: 1px solid rgb(49 180 255 / 0.2); border-radius: 0.6rem; background: #f8fbff; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.65); }
+.adminLogoFrame[data-variant="login"] { inline-size: min(100%, 13rem); }
+.adminLogoFrame[data-variant="loader"] { inline-size: 11rem; }
+.adminLogo { inline-size: 100%; block-size: auto; object-fit: contain; }
 .kicker { margin-block-start: 2rem; color: #31b4ff; font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.05em; }
 .loginCard h1 { margin-block-start: 0.55rem; color: #f1f6fc; font-family: var(--font-ar-display); font-size: clamp(2rem, 5vw, 2.8rem); line-height: 1.15; }
 .loginIntro { margin-block-start: 0.8rem; color: #91a2b7; font-size: var(--text-sm); line-height: 1.85; }
@@ -38,13 +42,14 @@
 .editorPanel input:focus-visible,
 .editorPanel textarea:focus-visible,
 .editorPanel select:focus-visible { border-color: #31b4ff; box-shadow: 0 0 0 3px rgb(49 180 255 / 0.12); }
+.editorPanel input[aria-invalid="true"] { border-color: #c96f7d; box-shadow: 0 0 0 3px rgb(201 111 125 / 0.1); }
 .loginForm button { min-block-size: 3.2rem; display: flex; align-items: center; justify-content: center; gap: 0.8rem; margin-block-start: 0.45rem; border: 0; border-radius: 0.62rem; background: #0b6edc; color: white; font-size: var(--text-sm); font-weight: 700; cursor: pointer; transition: transform 180ms, background-color 180ms; }
 .loginForm button:hover { background: #0a79ef; transform: translateY(-2px); }
 .loginForm button:disabled { cursor: wait; opacity: 0.65; transform: none; }
 .formError { min-block-size: 1.2rem; color: #ff9b9b; font-size: var(--text-sm); }
 
 .adminLoading { align-content: center; gap: 1.2rem; color: #91a2b7; font-size: var(--text-sm); }
-.loaderMark { position: relative; inline-size: 4rem; block-size: 4rem; display: grid; place-items: center; border: 1px solid #27425d; color: #f1f6fc; font-family: var(--font-en); }
+.loaderMark { position: relative; display: grid; place-items: center; padding: 0.2rem; border: 1px solid #27425d; color: #f1f6fc; font-family: var(--font-en); }
 .loaderMark i { position: absolute; inset: -1px; border: 1px solid transparent; border-block-start-color: #31b4ff; animation: loaderSpin 1s linear infinite; }
 @keyframes loaderSpin { to { rotate: 360deg; } }
 
@@ -129,6 +134,7 @@
 .editorToolbar button { min-block-size: 2.35rem; padding-inline: 0.8rem; border-radius: 0.45rem; font-size: var(--text-sm); font-weight: 700; cursor: pointer; }
 .previewButton { min-block-size: 2.35rem; display: inline-flex; align-items: center; padding-inline: 0.8rem; border: 1px solid #2a435b; border-radius: 0.45rem; color: #9db2c7; font-size: var(--text-sm); font-weight: 700; text-decoration: none; }
 .previewButton:hover { border-color: #3b607f; color: #f1f6fc; }
+.previewPending { min-block-size: 2.35rem; display: inline-flex; align-items: center; padding-inline: 0.75rem; border: 1px dashed #3b4b5f; border-radius: 0.45rem; color: #71859b; font-size: var(--text-sm); }
 .saveButton { border: 0; background: #0b6edc; color: white; }
 .saveButton:disabled { cursor: not-allowed; opacity: 0.42; }
 .dangerButton { border: 1px solid #50313b; background: transparent; color: #e99ba4; }
@@ -276,6 +282,7 @@
   .sidebarFoot a,
   .sidebarFoot button { font-size: 0; text-align: center; }
   .sidebarFoot a span { font-size: 1rem; }
+  .sidebarBrand .adminLogoFrame { inline-size: 3rem; padding: 0.18rem; }
   .contentWorkspace { grid-template-columns: 10rem 13rem minmax(23rem, 1fr); overflow-x: auto; }
 }
 

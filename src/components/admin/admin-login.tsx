@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { useRouter } from "next/navigation";
 
 import { adminRequest } from "./admin-api";
+import { AdminLogo } from "./admin-logo";
 import styles from "./admin.module.css";
 
 export function AdminLogin() {
@@ -52,7 +53,7 @@ export function AdminLogin() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className={styles.adminMark} aria-hidden="true"><span>AH</span><i /></div>
+        <AdminLogo variant="login" preload />
         <p className={styles.kicker}>لوحة إدارة الموقع</p>
         <h1>مرحبًا بعودتك</h1>
         <p className={styles.loginIntro}>سجّل الدخول لإدارة المحتوى والمشاريع والمقالات والرسائل والتحليلات.</p>

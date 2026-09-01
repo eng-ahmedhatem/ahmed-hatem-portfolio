@@ -37,6 +37,7 @@ export function ContactDock({ settings }: { settings: ResolvedSiteSettings }) {
   return (
     <motion.nav
       className={styles.dock}
+      data-contact-dock
       aria-label={settings.contactDockLabel}
       initial={reduce ? false : { opacity: 0, y: 18, scale: 0.94 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}

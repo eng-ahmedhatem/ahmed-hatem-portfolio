@@ -179,7 +179,7 @@ export function WorkArchive({
                     height={item.cover.height}
                     alt={item.cover.alt}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    loading={index < 4 ? "eager" : "lazy"}
+                    loading={index === 0 ? "eager" : "lazy"}
                   />
                   <span className={styles.mediaAction} aria-hidden="true">
                     <DirectionalArrow />

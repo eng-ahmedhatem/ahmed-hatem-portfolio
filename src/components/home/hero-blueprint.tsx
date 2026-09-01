@@ -241,7 +241,7 @@ export function HeroBlueprint({
                 width={profile.width}
                 height={profile.height}
                 alt={profile.alt}
-                preload
+                loading="eager"
                 sizes="(max-width: 38rem) 74vw, (max-width: 56rem) 48vw, 32vw"
               />
             </motion.div>

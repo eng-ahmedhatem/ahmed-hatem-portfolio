@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { adminRequest, type AdminContentRecord, type ContentKind } from "./admin-api";
 import { AdminContentEditor } from "./admin-content-editor";
+import { AdminLogo } from "./admin-logo";
 import styles from "./admin.module.css";
 
 type View = "overview" | "content" | "messages" | "analytics";
@@ -47,6 +48,7 @@ function newRecord(kind: "project" | "post" | "category", records: AdminContentR
   payload.id = id;
   if (kind === "project") {
     payload.status = "draft";
+    payload.filterKey = `project-${stamp}`;
     payload.featured = false;
     payload.featuredOrder = undefined;
     payload.technologies = [];
@@ -113,15 +115,27 @@ function recordStatus(record: AdminContentRecord) {
   return "مفعّل";
 }
 
-function recordPreviewHref(record: AdminContentRecord) {
+function recordPreviewHref(record: AdminContentRecord, locale: "ar" | "en") {
   if (record.payload.status === "draft") return null;
-  if (record.kind === "homepage" || record.kind === "site-settings") return "/ar";
-  if (record.kind === "static-page") return `/ar/${asString(record.payload.key)}`;
-  const slug = nestedString(record.payload, ["translations", "ar", "slug"]);
+  if (record.kind === "homepage" || record.kind === "site-settings") return `/${locale}`;
+  if (record.kind === "static-page") return `/${locale}/${asString(record.payload.key)}`;
+  const slug = nestedString(record.payload, ["translations", locale, "slug"]);
   if (!slug) return null;
-  if (record.kind === "project") return `/ar/work/${encodeURIComponent(slug)}`;
-  if (record.kind === "post") return `/ar/blog/${encodeURIComponent(slug)}`;
-  if (record.kind === "category") return `/ar/blog/category/${encodeURIComponent(slug)}`;
+  if (record.kind === "project") return `/${locale}/work/${encodeURIComponent(slug)}`;
+  if (record.kind === "post") return `/${locale}/blog/${encodeURIComponent(slug)}`;
+  if (record.kind === "category") return `/${locale}/blog/category/${encodeURIComponent(slug)}`;
+  return null;
+}
+
+function recordValidationError(record: AdminContentRecord) {
+  if (record.kind !== "project") return null;
+  const filterKey = asString(record.payload.filterKey);
+  if (!filterKey) {
+    return "أضف مفتاح التصنيف بحروف إنجليزية قبل الحفظ.";
+  }
+  if (!/^[a-zA-Z0-9_-]+$/.test(filterKey)) {
+    return "مفتاح التصنيف يقبل الحروف الإنجليزية والأرقام و- أو _ فقط.";
+  }
   return null;
 }
 
@@ -183,6 +197,13 @@ export function AdminPortal() {
   }, [dirtyRecords.size]);
 
   const selected = records.find((record) => record.entityId === selectedId && record.kind === activeKind);
+  const selectedIsDirty = selected ? dirtyRecords.has(recordKey(selected)) : false;
+  const previewLinks = selected && !selectedIsDirty
+    ? (["ar", "en"] as const).flatMap((locale) => {
+        const href = recordPreviewHref(selected, locale);
+        return href ? [{ href, locale }] : [];
+      })
+    : [];
   const kindRecords = useMemo(() => records.filter((record) => record.kind === activeKind), [activeKind, records]);
   const counts = useMemo(() => ({
     projects: records.filter((item) => item.kind === "project").length,
@@ -197,6 +218,12 @@ export function AdminPortal() {
 
   async function save() {
     if (!selected) return;
+    const validationError = recordValidationError(selected);
+    if (validationError) {
+      setError(validationError);
+      setNotice("");
+      return;
+    }
     setSaving(true); setError(""); setNotice("");
     try {
       const result = await adminRequest<{ record: AdminContentRecord }>(`/admin/content/${selected.kind}/${selected.entityId}`, {
@@ -205,7 +232,7 @@ export function AdminPortal() {
       });
       setRecords((current) => current.map((item) => item.kind === selected.kind && item.entityId === selected.entityId ? result.record : item));
       setDirtyRecords((current) => { const next = new Set(current); next.delete(recordKey(selected)); return next; });
-      setNotice(selected.payload.status === "draft" ? "تم حفظ المسودة بنجاح." : "تم حفظ التغييرات ونشرها بنجاح.");
+      setNotice(result.record.payload.status === "draft" ? "تم حفظ المسودة بنجاح." : "تم الحفظ والنشر. أصبحت معاينة العربية والإنجليزية جاهزة.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "تعذّر حفظ المحتوى.");
     } finally { setSaving(false); }
@@ -240,12 +267,12 @@ export function AdminPortal() {
     router.replace("/admin/login");
   }
 
-  if (loading) return <main className={styles.adminLoading}><div className={styles.loaderMark}>AH<i /></div><p>جارٍ تجهيز لوحة الإدارة…</p></main>;
+  if (loading) return <main className={styles.adminLoading}><div className={styles.loaderMark}><AdminLogo variant="loader" preload /><i /></div><p>جارٍ تجهيز لوحة الإدارة…</p></main>;
 
   return (
     <main className={styles.portal}>
       <aside className={styles.sidebar}>
-        <div className={styles.sidebarBrand}><div className={styles.adminMark}><span>AH</span><i /></div><div><b>Ahmed Hatem</b><small>Content Studio</small></div></div>
+        <div className={styles.sidebarBrand}><AdminLogo variant="sidebar" preload /><div><b>Ahmed Hatem</b><small>Content Studio</small></div></div>
         <nav aria-label="التنقل في لوحة الإدارة">
           {([[
             "overview", "نظرة عامة", "⌁"], ["content", "إدارة المحتوى", "◇"], ["messages", "طلبات التواصل", "✉"], ["analytics", "التحليلات", "↗"]] as [View, string, string][]).map(([key, label, icon]) => (
@@ -286,7 +313,7 @@ export function AdminPortal() {
                   {kindRecords.map((record) => <button type="button" key={record.entityId} data-active={selectedId === record.entityId} onClick={() => setSelectedId(record.entityId)}><b>{recordLabel(record)}</b><small>{record.entityId}</small><em data-dirty={dirtyRecords.has(recordKey(record))}>{dirtyRecords.has(recordKey(record)) ? "غير محفوظ" : recordStatus(record)}</em></button>)}
                 </div>
                 <div className={styles.editorWorkspace}>
-                  {selected ? <><div className={styles.editorToolbar}><div><small>{kindLabels[selected.kind]} · {recordStatus(selected)}{dirtyRecords.has(recordKey(selected)) ? " · تغييرات غير محفوظة" : ""}</small><h2>{recordLabel(selected)}</h2></div><div>{recordPreviewHref(selected) ? <a className={styles.previewButton} href={recordPreviewHref(selected) ?? undefined} target="_blank" rel="noreferrer">معاينة ↗</a> : null}{["project", "post", "category"].includes(selected.kind) ? <button type="button" className={styles.dangerButton} onClick={() => void remove()}>حذف</button> : null}<button type="button" className={styles.saveButton} onClick={() => void save()} disabled={saving || !dirtyRecords.has(recordKey(selected))}>{saving ? "جارٍ الحفظ…" : selected.payload.status === "draft" ? "حفظ المسودة" : "حفظ ونشر"}</button></div></div><AdminContentEditor record={selected} records={records} onChange={(next) => { setRecords((current) => current.map((item) => item.kind === next.kind && item.entityId === next.entityId ? next : item)); setDirtyRecords((current) => new Set(current).add(recordKey(next))); setNotice(""); setError(""); }} /></> : <div className={styles.emptyState}>اختر عنصرًا لتحريره.</div>}
+                  {selected ? <><div className={styles.editorToolbar}><div><small>{kindLabels[selected.kind]} · {recordStatus(selected)}{selectedIsDirty ? " · تغييرات غير محفوظة" : ""}</small><h2>{recordLabel(selected)}</h2></div><div>{selectedIsDirty && selected.payload.status !== "draft" ? <span className={styles.previewPending}>احفظ للمعاينة</span> : previewLinks.map((preview) => <a key={preview.locale} className={styles.previewButton} href={preview.href} target="_blank" rel="noreferrer">معاينة {preview.locale.toUpperCase()} ↗</a>)}{["project", "post", "category"].includes(selected.kind) ? <button type="button" className={styles.dangerButton} onClick={() => void remove()}>حذف</button> : null}<button type="button" className={styles.saveButton} onClick={() => void save()} disabled={saving || !selectedIsDirty}>{saving ? "جارٍ الحفظ…" : selected.payload.status === "draft" ? "حفظ المسودة" : "حفظ ونشر"}</button></div></div><AdminContentEditor record={selected} records={records} onChange={(next) => { setRecords((current) => current.map((item) => item.kind === next.kind && item.entityId === next.entityId ? next : item)); setDirtyRecords((current) => new Set(current).add(recordKey(next))); setNotice(""); setError(""); }} /></> : <div className={styles.emptyState}>اختر عنصرًا لتحريره.</div>}
                   <AnimatePresence>{notice || error ? <motion.p className={error ? styles.noticeError : styles.notice} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>{error || notice}</motion.p> : null}</AnimatePresence>
                 </div>
               </div>
