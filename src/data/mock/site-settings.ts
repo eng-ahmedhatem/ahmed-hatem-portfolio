@@ -52,6 +52,7 @@ export const mockSiteSettings: SiteSettings = {
       footerRole: "WordPress & Web Developer",
       footerNavigationLabel: "روابط التذييل",
       copyrightLabel: "جميع الحقوق محفوظة.",
+      footerText: "© 2026 أحمد حاتم — جميع الحقوق محفوظة.",
       seo: createMockSeo(
         "أحمد حاتم — مطوّر WordPress ومواقع ويب",
         "موقع أحمد حاتم لعرض تطوير مواقع WordPress وتجارب الويب المخصصة والمتجاوبة.",
@@ -84,6 +85,7 @@ export const mockSiteSettings: SiteSettings = {
       footerRole: "WordPress & Web Developer",
       footerNavigationLabel: "Footer navigation",
       copyrightLabel: "All rights reserved.",
+      footerText: "© 2026 Ahmed Hatem — All rights reserved.",
       seo: createMockSeo(
         "Ahmed Hatem — WordPress & Web Developer",
         "Ahmed Hatem’s portfolio for custom WordPress development and responsive, performance-focused websites.",

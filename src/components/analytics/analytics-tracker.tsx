@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 import type { Locale } from "@/domain/content/types";
 
 const VISITOR_KEY = "ah-portfolio-visitor:v1";
-const trackedPaths = new Set<string>();
+const DUPLICATE_WINDOW_MS = 2_500;
+let lastTracked: { path: string; at: number } | null = null;
 
 function visitorId() {
   try {
@@ -24,10 +25,12 @@ export function AnalyticsTracker({ locale }: { locale: Locale }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!pathname || trackedPaths.has(pathname) || navigator.doNotTrack === "1") return;
+    const localHost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+    if (process.env.NODE_ENV !== "production" || localHost || !pathname || navigator.doNotTrack === "1") return;
     const track = () => {
-      if (trackedPaths.has(pathname)) return;
-      trackedPaths.add(pathname);
+      const now = Date.now();
+      if (lastTracked?.path === pathname && now - lastTracked.at < DUPLICATE_WINDOW_MS) return;
+      lastTracked = { path: pathname, at: now };
       const payload = JSON.stringify({
         visitorId: visitorId(),
         path: pathname,

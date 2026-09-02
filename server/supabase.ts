@@ -38,16 +38,28 @@ export function createSupabaseAuthClient() {
 
 export async function connectSupabase(): Promise<boolean> {
   if (!hasDatabaseConfiguration()) return false;
-  const { error } = await getSupabaseAdmin()
-    .from("content_records")
-    .select("entity_id")
-    .limit(1);
-  if (error) {
-    databaseReady = false;
-    throw new Error(`Supabase schema is unavailable: ${error.message}`);
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { error } = await getSupabaseAdmin()
+      .from("content_records")
+      .select("entity_id")
+      .limit(1);
+
+    if (!error) {
+      databaseReady = true;
+      return true;
+    }
+
+    const retryableClockSkew = error.message.toLowerCase().includes("jwt issued at future");
+    if (!retryableClockSkew || attempt === 2) {
+      databaseReady = false;
+      throw new Error(`Supabase schema is unavailable: ${error.message}`);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
   }
-  databaseReady = true;
-  return true;
+
+  return false;
 }
 
 export function isDatabaseReady() {

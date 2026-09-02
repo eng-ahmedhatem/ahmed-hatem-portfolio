@@ -64,6 +64,7 @@ export interface SiteSettingsTranslation {
   footerRole: string;
   footerNavigationLabel: string;
   copyrightLabel: string;
+  footerText?: string;
   seo: SeoMetadata;
 }
 

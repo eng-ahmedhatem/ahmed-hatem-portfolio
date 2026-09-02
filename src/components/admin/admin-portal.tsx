@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, useReducedMotion } from "motion/react";
+import * as motion from "motion/react-m";
 import { useRouter } from "next/navigation";
 
 import { adminRequest, type AdminContentRecord, type ContentKind } from "./admin-api";
@@ -156,6 +157,7 @@ export function AdminPortal() {
   const [activity, setActivity] = useState<AuditItem[]>([]);
   const [dirtyRecords, setDirtyRecords] = useState<Set<string>>(() => new Set());
   const [loading, setLoading] = useState(true);
+  const [backgroundLoading, setBackgroundLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -163,26 +165,28 @@ export function AdminPortal() {
   useEffect(() => {
     let mounted = true;
     async function bootstrap() {
+      const secondaryRequests = Promise.allSettled([
+        adminRequest<{ items: ContactItem[] }>("/admin/contacts"),
+        adminRequest<AnalyticsData>("/admin/analytics"),
+        adminRequest<{ items: AuditItem[] }>("/admin/activity"),
+      ]);
+
       try {
-        const [contentResult, inboxResult, metricsResult, activityResult] = await Promise.allSettled([
-          adminRequest<{ records: AdminContentRecord[] }>("/admin/content"),
-          adminRequest<{ items: ContactItem[] }>("/admin/contacts"),
-          adminRequest<AnalyticsData>("/admin/analytics"),
-          adminRequest<{ items: AuditItem[] }>("/admin/activity"),
-        ]);
+        const content = await adminRequest<{ records: AdminContentRecord[] }>("/admin/content");
         if (!mounted) return;
-        if (contentResult.status === "rejected") throw contentResult.reason;
-        const content = contentResult.value;
         setRecords(content.records);
+        const first = content.records.find((record) => record.kind === "homepage");
+        if (first) setSelectedId(first.entityId);
+        setLoading(false);
+
+        const [inboxResult, metricsResult, activityResult] = await secondaryRequests;
+        if (!mounted) return;
         if (inboxResult.status === "fulfilled") setContacts(inboxResult.value.items);
         if (metricsResult.status === "fulfilled") setAnalytics(metricsResult.value);
         if (activityResult.status === "fulfilled") setActivity(activityResult.value.items);
-        const first = content.records.find((record) => record.kind === "homepage");
-        if (first) setSelectedId(first.entityId);
+        setBackgroundLoading(false);
       } catch {
         router.replace("/admin/login");
-      } finally {
-        if (mounted) setLoading(false);
       }
     }
     void bootstrap();
@@ -267,7 +271,28 @@ export function AdminPortal() {
     router.replace("/admin/login");
   }
 
-  if (loading) return <main className={styles.adminLoading}><div className={styles.loaderMark}><AdminLogo variant="loader" preload /><i /></div><p>جارٍ تجهيز لوحة الإدارة…</p></main>;
+  if (loading) return (
+    <motion.main
+      className={styles.adminLoading}
+      aria-live="polite"
+      aria-busy="true"
+      initial={reduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.35 }}
+    >
+      <div className={styles.loaderShell}>
+        <div className={styles.loaderIdentity}>
+          <AdminLogo variant="loader" preload />
+          <span>AH / CONTENT STUDIO</span>
+        </div>
+        <div className={styles.loaderCopy}>
+          <h1>نجهّز مساحة عملك</h1>
+          <p>يتم الآن تحميل المحتوى المؤمّن.</p>
+        </div>
+        <div className={styles.loaderRail} role="progressbar" aria-label="جارٍ تحميل لوحة الإدارة"><i /></div>
+      </div>
+    </motion.main>
+  );
 
   return (
     <main className={styles.portal}>
@@ -291,14 +316,14 @@ export function AdminPortal() {
                 <div className={styles.metricGrid}>
                   <article><span>المشاريع</span><strong>{counts.projects}</strong><small>داخل معرض الأعمال</small></article>
                   <article><span>المقالات</span><strong>{counts.posts}</strong><small>منشور ومسودة</small></article>
-                  <article><span>رسائل جديدة</span><strong>{counts.messages}</strong><small>بانتظار المراجعة</small></article>
-                  <article><span>زيارات 30 يومًا</span><strong>{analytics?.views ?? 0}</strong><small>{analytics?.uniqueVisitors ?? 0} زائر فريد</small></article>
+                  <article><span>رسائل جديدة</span><strong>{backgroundLoading ? "—" : counts.messages}</strong><small>بانتظار المراجعة</small></article>
+                  <article><span>زيارات 30 يومًا</span><strong>{analytics?.views ?? "—"}</strong><small>{analytics ? `${analytics.uniqueVisitors} متصفح فريد تقريبيًا` : "جارٍ تحميل التحليلات"}</small></article>
                 </div>
                 <div className={styles.overviewGrid}>
                   <article className={styles.overviewPanel}><header><div><span>نشاط الزيارات</span><h2>آخر 30 يومًا</h2></div><button type="button" onClick={() => setView("analytics")}>كل التحليلات</button></header><MiniBars data={analytics?.byDay ?? []} /></article>
                   <article className={styles.quickPanel}><span>إجراء سريع</span><h2>ما الذي تريد إضافته؟</h2><button type="button" onClick={() => { create("project"); setView("content"); }}>مشروع جديد <b>＋</b></button><button type="button" onClick={() => { create("post"); setView("content"); }}>مقال جديد <b>＋</b></button></article>
                 </div>
-                <article className={styles.activityPanel}><header><div><span>سجل الإدارة</span><h2>آخر التغييرات المؤمنة</h2></div></header><div>{activity.length ? activity.slice(0, 8).map((item) => <div key={item.id}><time>{new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time><p><b>{item.action}</b><span>{item.entityKind} / {item.entityId}</span></p><small>{item.actorEmail}</small></div>) : <p className={styles.inlineEmpty}>سيظهر النشاط هنا بعد أول عملية حفظ.</p>}</div></article>
+                <article className={styles.activityPanel}><header><div><span>سجل الإدارة</span><h2>آخر التغييرات المؤمنة</h2></div></header><div>{activity.length ? activity.slice(0, 8).map((item) => <div key={item.id}><time>{new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time><p><b>{item.action}</b><span>{item.entityKind} / {item.entityId}</span></p><small>{item.actorEmail}</small></div>) : <p className={styles.inlineEmpty}>{backgroundLoading ? "جارٍ تحميل سجل الإدارة…" : "سيظهر النشاط هنا بعد أول عملية حفظ."}</p>}</div></article>
               </>
             ) : null}
 
@@ -320,12 +345,12 @@ export function AdminPortal() {
             ) : null}
 
             {view === "messages" ? (
-              <div className={styles.messageList}>{contacts.length ? contacts.map((item) => <article key={item._id} data-status={item.status}><header><div><span>{item.status === "new" ? "جديد" : item.status === "read" ? "تمت القراءة" : "مؤرشف"}</span><h2>{item.name}</h2></div><time>{new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></header><div className={styles.messageMeta}><a href={`mailto:${item.email}`}>{item.email}</a>{item.phone ? <a href={`tel:${item.phone}`}>{item.phone}</a> : null}<span>{item.service}</span></div><p>{item.details}</p><footer><button type="button" onClick={() => void updateContact(item, "read")}>تمت القراءة</button><button type="button" onClick={() => void updateContact(item, "archived")}>أرشفة</button></footer></article>) : <div className={styles.emptyState}>لا توجد طلبات تواصل حتى الآن.</div>}</div>
+              <div className={styles.messageList}>{contacts.length ? contacts.map((item) => <article key={item._id} data-status={item.status}><header><div><span>{item.status === "new" ? "جديد" : item.status === "read" ? "تمت القراءة" : "مؤرشف"}</span><h2>{item.name}</h2></div><time>{new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></header><div className={styles.messageMeta}><a href={`mailto:${item.email}`}>{item.email}</a>{item.phone ? <a href={`tel:${item.phone}`}>{item.phone}</a> : null}<span>{item.service}</span></div><p>{item.details}</p><footer><button type="button" onClick={() => void updateContact(item, "read")}>تمت القراءة</button><button type="button" onClick={() => void updateContact(item, "archived")}>أرشفة</button></footer></article>) : <div className={styles.emptyState}>{backgroundLoading ? "جارٍ تحميل طلبات التواصل…" : "لا توجد طلبات تواصل حتى الآن."}</div>}</div>
             ) : null}
 
             {view === "analytics" ? (
               <div className={styles.analyticsView}>
-                <div className={styles.metricGrid}><article><span>إجمالي المشاهدات</span><strong>{analytics?.views ?? 0}</strong><small>آخر {analytics?.rangeDays ?? 30} يومًا</small></article><article><span>الزوار الفريدون</span><strong>{analytics?.uniqueVisitors ?? 0}</strong><small>بدون تخزين عنوان IP</small></article>{analytics?.byDevice.map((item) => <article key={item._id}><span>{item._id === "mobile" ? "الهاتف" : item._id === "tablet" ? "الجهاز اللوحي" : "الكمبيوتر"}</span><strong>{item.value}</strong><small>مشاهدة</small></article>)}</div>
+                <div className={styles.metricGrid}><article><span>إجمالي المشاهدات</span><strong>{analytics?.views ?? "—"}</strong><small>آخر {analytics?.rangeDays ?? 30} يومًا</small></article><article><span>المتصفحات الفريدة</span><strong>{analytics?.uniqueVisitors ?? "—"}</strong><small>تقدير يحترم الخصوصية ولا يخزن IP</small></article>{analytics?.byDevice.map((item) => <article key={item._id}><span>{item._id === "mobile" ? "الهاتف" : item._id === "tablet" ? "الجهاز اللوحي" : "الكمبيوتر"}</span><strong>{item.value}</strong><small>مشاهدة</small></article>)}</div>
                 <div className={styles.analyticsGrid}><article className={styles.overviewPanel}><header><div><span>التوزيع اليومي</span><h2>حركة الزيارات</h2></div></header><MiniBars data={analytics?.byDay ?? []} /></article><article className={styles.topPages}><span>أكثر الصفحات زيارة</span>{analytics?.topPages.map((item, index) => <div key={item._id}><b>{String(index + 1).padStart(2, "0")}</b><p>{item._id}</p><strong>{item.value}</strong></div>)}</article></div>
               </div>
             ) : null}

@@ -472,9 +472,7 @@ export function AdminContentEditor({ record, records, onChange }: { record: Admi
         <TextField payload={payload} path={[...translationBase, "contactDockLabel"]} label="عنوان التواصل السريع" locale={locale} onChange={updatePayload} />
         <TextField payload={payload} path={[...translationBase, "whatsappLabel"]} label="وصف واتساب" locale={locale} onChange={updatePayload} />
         <TextField payload={payload} path={[...translationBase, "facebookLabel"]} label="وصف فيسبوك" locale={locale} onChange={updatePayload} />
-        <TextField payload={payload} path={[...translationBase, "footerRole"]} label="وصف الفوتر" locale={locale} onChange={updatePayload} />
-        <TextField payload={payload} path={[...translationBase, "footerNavigationLabel"]} label="وصف تنقل الفوتر" locale={locale} onChange={updatePayload} />
-        <TextField payload={payload} path={[...translationBase, "copyrightLabel"]} label="حقوق النشر" locale={locale} onChange={updatePayload} />
+        <TextField payload={payload} path={[...translationBase, "footerText"]} label="نص الفوتر الكامل" locale={locale} onChange={updatePayload} />
       </EditorSection>
       <EditorSection eyebrow="02A" title="نصوص الواجهة وإتاحة الاستخدام" summary="أسماء التحكم التي يستخدمها الزائر وقارئ الشاشة.">
         <TextField payload={payload} path={[...translationBase, "navigationLabel"]} label="وصف التنقل الرئيسي" locale={locale} onChange={updatePayload} />

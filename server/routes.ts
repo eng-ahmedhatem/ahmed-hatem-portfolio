@@ -124,9 +124,13 @@ function canAttemptLogin(key: string) {
 }
 
 function classifyDevice(userAgent: string) {
-  if (/ipad|tablet|playbook|silk/i.test(userAgent)) return "tablet" as const;
+  if (/ipad|tablet|playbook|silk/i.test(userAgent) || (/android/i.test(userAgent) && !/mobile/i.test(userAgent))) return "tablet" as const;
   if (/mobile|iphone|ipod|android/i.test(userAgent)) return "mobile" as const;
   return "desktop" as const;
+}
+
+function isLikelyBot(userAgent: string) {
+  return /bot|crawler|spider|slurp|lighthouse|headlesschrome|preview|facebookexternalhit|whatsapp/i.test(userAgent);
 }
 
 function throwSupabaseError(error: { message: string } | null, context: string) {
@@ -548,13 +552,18 @@ router.post("/analytics", requireTrustedOrigin, databaseGuard, async (request, r
     response.status(503).json({ error: "Analytics is not configured." });
     return;
   }
+  const userAgent = request.get("user-agent") ?? "";
+  if (isLikelyBot(userAgent)) {
+    response.status(204).end();
+    return;
+  }
   const visitorHash = createHmac("sha256", salt).update(parsed.data.visitorId).digest("hex");
   const { error } = await getSupabaseAdmin().from("page_views").insert({
     visitor_hash: visitorHash,
     path: parsed.data.path,
     locale: parsed.data.locale,
     referrer: parsed.data.referrer || null,
-    device: classifyDevice(request.get("user-agent") ?? ""),
+    device: classifyDevice(userAgent),
   });
   throwSupabaseError(error, "Unable to record the analytics event");
   response.status(204).end();

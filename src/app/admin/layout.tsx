@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { fontVariables } from "@/app/fonts";
+import { MotionFoundation } from "@/components/motion/motion-foundation";
 
 import "../globals.css";
 import "./admin.css";
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ar" dir="rtl" className={fontVariables} data-theme="dark">
-      <body>{children}</body>
+      <body><MotionFoundation>{children}</MotionFoundation></body>
     </html>
   );
 }

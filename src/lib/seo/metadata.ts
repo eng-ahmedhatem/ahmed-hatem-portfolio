@@ -55,11 +55,6 @@ export function createLocalizedMetadata({
     metadataBase: getSiteUrl(),
     title: seo.title,
     description: seo.description,
-    icons: {
-      icon: "/assets/logo/favicon-192.png",
-      shortcut: "/assets/logo/favicon-192.png",
-      apple: "/assets/logo/favicon-192.png",
-    },
     alternates: {
       canonical,
       languages: languageAlternates,

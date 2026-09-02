@@ -137,6 +137,7 @@ const contentSchemas: Record<ContentKind, z.ZodType<Record<string, unknown>>> = 
       footerRole: shortText,
       footerNavigationLabel: shortText,
       copyrightLabel: shortText,
+      footerText: z.string().trim().max(320).optional(),
       seo: seoSchema,
     })),
   }).passthrough(),

@@ -165,9 +165,13 @@ function canAttemptLogin(key: string) {
 }
 
 function classifyDevice(userAgent: string) {
-  if (/ipad|tablet|playbook|silk/i.test(userAgent)) return "tablet" as const;
+  if (/ipad|tablet|playbook|silk/i.test(userAgent) || (/android/i.test(userAgent) && !/mobile/i.test(userAgent))) return "tablet" as const;
   if (/mobile|iphone|ipod|android/i.test(userAgent)) return "mobile" as const;
   return "desktop" as const;
+}
+
+function isLikelyBot(userAgent: string) {
+  return /bot|crawler|spider|slurp|lighthouse|headlesschrome|preview|facebookexternalhit|whatsapp/i.test(userAgent);
 }
 
 function detectedImageMimeType(buffer: Buffer) {
@@ -412,8 +416,10 @@ export async function handleCmsRequest(request: Request, path: readonly string[]
     const parsed = analyticsSchema.safeParse(await requestJson(request));
     if (!parsed.success) return json({ error: "Invalid analytics event." }, 400);
     if (!serverConfig.analyticsSalt) return json({ error: "Analytics is not configured." }, 503);
+    const userAgent = request.headers.get("user-agent") ?? "";
+    if (isLikelyBot(userAgent)) return empty();
     const visitorHash = createHmac("sha256", serverConfig.analyticsSalt).update(parsed.data.visitorId).digest("hex");
-    const { error } = await getSupabaseAdmin().from("page_views").insert({ visitor_hash: visitorHash, path: parsed.data.path, locale: parsed.data.locale, referrer: parsed.data.referrer || null, device: classifyDevice(request.headers.get("user-agent") ?? "") });
+    const { error } = await getSupabaseAdmin().from("page_views").insert({ visitor_hash: visitorHash, path: parsed.data.path, locale: parsed.data.locale, referrer: parsed.data.referrer || null, device: classifyDevice(userAgent) });
     throwSupabaseError(error, "Unable to record the analytics event");
     return empty();
   }
