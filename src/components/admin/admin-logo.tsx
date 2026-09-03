@@ -17,7 +17,7 @@ export function AdminLogo({ variant = "sidebar", preload = false }: AdminLogoPro
         src={compact ? "/assets/logo/favicon-192.png" : "/assets/logo/logo.png"}
         width={compact ? 192 : 1738}
         height={compact ? 192 : 721}
-        sizes={compact ? "76px" : variant === "sidebar" ? "168px" : "208px"}
+        sizes={compact ? "76px" : variant === "sidebar" ? "168px" : "(max-width: 768px) 180px, 224px"}
         alt="Ahmed Hatem"
         preload={preload}
       />
