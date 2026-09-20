@@ -71,6 +71,7 @@ export interface SiteSettingsTranslation {
 export interface SiteSettings {
   id: string;
   identity: {
+    employment?: Employment;
     email?: string;
     logoSrc?: string;
     logoWidth?: number;
@@ -78,6 +79,10 @@ export interface SiteSettings {
     profileSrc?: string;
     profileWidth?: number;
     profileHeight?: number;
+    searchConsole?: {
+      propertyUrl?: string;
+      verificationToken?: string;
+    };
     socialLinks: readonly {
       id: string;
       label: string;
@@ -85,6 +90,28 @@ export interface SiteSettings {
     }[];
   };
   translations: TranslationState<SiteSettingsTranslation>;
+}
+
+export interface Employment {
+  enabled: boolean;
+  url: string;
+  translations: TranslationState<{
+    label: string;
+    role: string;
+    company: string;
+    description: string;
+  }>;
+}
+
+export interface ProjectAttribution {
+  kind: "independent" | "agency";
+  agencyUrl?: string;
+  permissionConfirmed: boolean;
+  translations: TranslationState<{
+    agencyName: string;
+    contribution: string;
+    notice: string;
+  }>;
 }
 
 export interface ResolvedSiteSettings extends SiteSettingsTranslation {
@@ -202,6 +229,7 @@ export interface HomepageTranslation {
 
 export interface Homepage {
   id: string;
+  testimonials?: TestimonialsSettings;
   actions: {
     primaryTarget: PageKey;
     secondaryTarget: PageKey;
@@ -212,6 +240,7 @@ export interface Homepage {
 
 export interface ResolvedHomepage extends HomepageTranslation {
   id: string;
+  testimonials: { enabled: boolean } & TestimonialsCopy;
   locale: Locale;
   actions: Homepage["actions"];
   sections: readonly (HomepageSectionTranslation & {
@@ -233,6 +262,41 @@ export interface MediaAsset {
   }>;
 }
 
+export interface TestimonialsCopy {
+  eyebrow: string;
+  title: string;
+  summary: string;
+  sourceLabel: string;
+}
+
+export interface TestimonialsSettings {
+  enabled: boolean;
+  translations: Record<Locale, TestimonialsCopy>;
+}
+
+export interface TestimonialTranslation {
+  name: string;
+  role: string;
+  company: string;
+  quote: string;
+}
+
+export interface Testimonial {
+  id: string;
+  status: "draft" | "published";
+  featured: boolean;
+  featuredOrder: number;
+  consentConfirmed: boolean;
+  sourceUrl?: string;
+  avatar?: MediaAsset;
+  translations: TranslationState<TestimonialTranslation>;
+  updatedAt: string;
+}
+
+export interface ResolvedTestimonial extends Omit<Testimonial, "translations">, TestimonialTranslation {
+  locale: Locale;
+}
+
 export interface ProjectTranslation {
   title: string;
   slug: string;
@@ -248,6 +312,7 @@ export interface ProjectTranslation {
 
 export interface Project {
   id: string;
+  attribution?: ProjectAttribution;
   status?: "draft" | "published";
   implementationDate?: string;
   technologies: readonly string[];

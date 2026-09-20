@@ -6,12 +6,14 @@ import type {
   ResolvedBlogPost,
   ResolvedHomepage,
   ResolvedProject,
+  ResolvedTestimonial,
   ResolvedSiteSettings,
   ResolvedStaticPage,
   StaticPage,
 } from "@/domain/content/types";
 
 export interface ContentRepository {
+  getTestimonials(locale: Locale): Promise<readonly ResolvedTestimonial[]>;
   getSiteSettings(locale: Locale): Promise<ResolvedSiteSettings>;
   getHomepage(locale: Locale): Promise<ResolvedHomepage>;
   getProjects(locale: Locale): Promise<readonly ResolvedProject[]>;

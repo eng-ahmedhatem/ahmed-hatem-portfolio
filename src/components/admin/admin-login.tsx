@@ -42,6 +42,7 @@ export function AdminLogin() {
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [configurationReady, setConfigurationReady] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -61,10 +62,11 @@ export function AdminLogin() {
     setError("");
     const data = new FormData(event.currentTarget);
     try {
-      await adminRequest("/auth/login", {
+      const result = await adminRequest<{ mfaRequired?: boolean }>("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email: data.get("email"), password: data.get("password") }),
       });
+      if (result.mfaRequired) { setMfaRequired(true); return; }
       router.replace("/admin");
       router.refresh();
     } catch (caught) {
@@ -72,6 +74,14 @@ export function AdminLogin() {
     } finally {
       setPending(false);
     }
+  }
+
+  async function verifyMfa(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setPending(true); setError("");
+    const data = new FormData(event.currentTarget);
+    try { await adminRequest("/auth/mfa", { method: "POST", body: JSON.stringify({ code: data.get("code") }) }); router.replace("/admin"); router.refresh(); }
+    catch (caught) { setError(caught instanceof Error ? caught.message : "تعذّر التحقق."); }
+    finally { setPending(false); }
   }
 
   const status = configurationReady === null
@@ -145,7 +155,12 @@ export function AdminLogin() {
             <p className={styles.setupWarning} role="status">يلزم تفعيل Supabase وإضافة مفاتيح المشروع وبيانات المدير في ملف البيئة قبل أول تسجيل دخول.</p>
           ) : null}
 
-          <form onSubmit={submit} className={styles.loginForm}>
+          {mfaRequired ? <form onSubmit={verifyMfa} className={styles.loginForm}>
+            <label className={styles.loginField}>رمز تطبيق المصادقة<input name="code" autoFocus inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} dir="ltr" required /></label>
+            <button className={styles.loginSubmit} type="submit" disabled={pending}>{pending ? "جارٍ التحقق…" : "تأكيد الدخول"}</button>
+            <button type="button" onClick={() => { setMfaRequired(false); setError(""); }}>العودة لبيانات الدخول</button>
+            <p className={styles.formError} role="alert">{error}</p>
+          </form> : <form onSubmit={submit} className={styles.loginForm}>
             <div className={styles.loginField}>
               <label htmlFor="admin-email">البريد الإلكتروني</label>
               <div className={styles.loginInputFrame}>
@@ -176,11 +191,12 @@ export function AdminLogin() {
               <b aria-hidden="true">←</b>
             </button>
             <p className={styles.formError} role="alert" aria-live="polite">{error}</p>
-          </form>
+            <Link href="/admin/recover">نسيت كلمة المرور؟</Link>
+          </form>}
 
           <p className={styles.loginSecurityNote}>
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 5.5 5.7v5.7c0 4.1 2.7 7.7 6.5 9.6 3.8-1.9 6.5-5.5 6.5-9.6V5.7L12 3Z" /><path d="m9.5 12 1.7 1.7 3.5-4" /></svg>
-            جلسة مشفّرة ومخصصة لمدير الموقع فقط
+              جلسة محمية ومخصصة لمدير الموقع فقط
           </p>
         </motion.section>
       </div>

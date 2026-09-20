@@ -1,5 +1,11 @@
 # Developer Portfolio — Codex Instructions
 
+## Required current-state context
+
+Read `PROJECT_CONTEXT.md` completely before changing this repository. It documents the implemented system and active handoff state.
+
+The repository has advanced beyond its original frontend-only foundation: Supabase, authentication, the CMS/admin dashboard, contact storage, and privacy-preserving analytics are already implemented with user authorization. Preserve these systems. The original Phase 1 constraints below are historical foundation rules and must not be interpreted as permission to delete or replace working later-phase functionality.
+
 ## Product
 Build a premium bilingual developer portfolio/platform for:
 - MERN development

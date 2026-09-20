@@ -1,5 +1,7 @@
 import { handleCmsRequest } from "@server/cms-handler";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { after } from "next/server";
+import { notifyContact } from "@server/mail";
 
 import { CONTENT_SNAPSHOT_CACHE_TAG } from "@/data/content-cache";
 
@@ -40,6 +42,10 @@ async function dispatch(request: Request, context: CmsContext) {
   try {
     const { path } = await context.params;
     const response = await handleCmsRequest(request, path);
+    if (response.ok && request.method === "POST" && path.join("/") === "contact") {
+      const body = await response.clone().json() as { id?: string };
+      if (body.id) after(async () => { await notifyContact(body.id!); });
+    }
     if (
       response.ok
       && ["PUT", "DELETE"].includes(request.method)

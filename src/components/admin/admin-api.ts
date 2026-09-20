@@ -1,4 +1,4 @@
-export type ContentKind = "site-settings" | "homepage" | "static-page" | "project" | "post" | "category";
+export type ContentKind = "site-settings" | "homepage" | "static-page" | "project" | "post" | "category" | "testimonial";
 
 export interface AdminContentRecord {
   _id?: string;
@@ -6,6 +6,10 @@ export interface AdminContentRecord {
   entityId: string;
   payload: Record<string, unknown>;
   updatedAt?: string;
+}
+
+export class AdminRequestError extends Error {
+  constructor(message: string, public status: number) { super(message); this.name = "AdminRequestError"; }
 }
 
 export async function adminRequest<T>(path: string, init?: RequestInit): Promise<T> {
@@ -20,7 +24,7 @@ export async function adminRequest<T>(path: string, init?: RequestInit): Promise
   });
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(body?.error ?? `Request failed (${response.status}).`);
+    throw new AdminRequestError(body?.error ?? `Request failed (${response.status}).`, response.status);
   }
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;

@@ -11,6 +11,10 @@ export const mockSiteSettings: SiteSettings = {
     profileSrc: "/assets/profile/profile-cutout.png",
     profileWidth: 1146,
     profileHeight: 1372,
+    searchConsole: {
+      propertyUrl: "",
+      verificationToken: "",
+    },
     socialLinks: [
       {
         id: "whatsapp",

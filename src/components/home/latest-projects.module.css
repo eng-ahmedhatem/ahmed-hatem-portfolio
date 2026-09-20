@@ -129,8 +129,6 @@
 
 .project {
   min-inline-size: 0;
-  content-visibility: auto;
-  contain-intrinsic-size: 42rem;
 }
 
 .project:nth-child(even) {

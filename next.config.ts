@@ -17,6 +17,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 31_536_000,
     remotePatterns: supabaseOrigin
       ? [
           {

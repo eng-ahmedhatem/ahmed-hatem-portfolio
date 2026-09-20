@@ -2,7 +2,6 @@
 
 import {
   useMotionValue,
-  useInView,
   useReducedMotion,
   useScroll,
   useSpring,
@@ -23,7 +22,6 @@ const PREMIUM_EASE = [0.22, 1, 0.36, 1] as const;
 export function Hero({ hero }: { hero: HeroViewModel }) {
   const sectionRef = useRef<HTMLElement>(null);
   const reduce = Boolean(useReducedMotion());
-  const isActive = useInView(sectionRef, { amount: 0.05 });
   const pointerX = useMotionValue(0);
   const pointerY = useMotionValue(0);
   const pointerSpringX = useSpring(pointerX, {
@@ -156,22 +154,7 @@ export function Hero({ hero }: { hero: HeroViewModel }) {
             <small>{hero.role}</small>
           </motion.div>
 
-          <motion.p className={styles.liveState} variants={itemVariants}>
-            <i aria-hidden="true" />
-            {hero.blueprint.liveLabel}
-          </motion.p>
         </motion.div>
-
-        <HeroBlueprint
-          locale={hero.locale}
-          blueprint={hero.blueprint}
-          profile={hero.profile}
-          pointerX={pointerSpringX}
-          pointerY={pointerSpringY}
-          progress={scrollYProgress}
-          reducedMotion={reduce}
-          isActive={isActive}
-        />
 
         <motion.div
           className={styles.titleBlock}
@@ -213,8 +196,24 @@ export function Hero({ hero }: { hero: HeroViewModel }) {
               {hero.secondaryAction.label}
             </ActionLink>
           </motion.div>
+          <motion.ul className={styles.benefits} variants={itemVariants} aria-label={hero.capabilityLabel}>
+            {hero.capabilities.slice(0, 3).map((benefit) => <li key={benefit}>{benefit}</li>)}
+          </motion.ul>
+          {hero.employment ? <motion.div className={styles.employment} variants={itemVariants}>
+            <span aria-hidden="true" className={styles.employmentDot} />
+            <p><span>{hero.employment.role}</span><a href={hero.employment.url} target="_blank" rel="noopener noreferrer">{hero.employment.company}<span aria-hidden="true"> ↗</span></a></p>
+          </motion.div> : null}
         </motion.div>
 
+        <HeroBlueprint
+          locale={hero.locale}
+          blueprint={hero.blueprint}
+          profile={hero.profile}
+          pointerX={pointerSpringX}
+          pointerY={pointerSpringY}
+          progress={scrollYProgress}
+          reducedMotion={reduce}
+        />
       </Container>
     </section>
   );

@@ -33,6 +33,11 @@ export function ProjectDetail({ view }: { view: ProjectView }) {
                 <p className={styles.eyebrow}><span aria-hidden="true" />{labels.caseStudy} / {project.projectType}</p>
                 <h1 id="project-title">{project.title}</h1>
                 <p className={styles.summary}>{view.intro.summary}</p>
+                {project.attribution ? <aside className={styles.attribution}>
+                  {project.attribution.url ? <a href={project.attribution.url} target="_blank" rel="noopener noreferrer">{project.attribution.agencyName} ↗</a> : <strong>{project.attribution.agencyName}</strong>}
+                  <p>{project.attribution.contribution}</p>
+                  <small>{project.attribution.notice}</small>
+                </aside> : null}
                 {project.liveLink ? <ActionLink className={styles.liveLink} href={project.liveLink.url}>{labels.live}</ActionLink> : null}
               </div>
               <dl className={styles.meta}>

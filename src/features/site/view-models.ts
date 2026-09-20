@@ -1,6 +1,7 @@
 import { cache } from "react";
 
 import { contentRepository } from "@/data/content-repository";
+import type { ContentRepository } from "@/domain/content/repositories";
 import type {
   ContactFormTranslation,
   HeroBlueprintTranslation,
@@ -65,6 +66,7 @@ export interface HeroViewModel {
   capabilities: readonly string[];
   blueprint: HeroBlueprintTranslation;
   profile?: ImageViewModel;
+  employment?: { label: string; role: string; company: string; description: string; url: string };
 }
 
 export interface HomepageSectionIntroViewModel {
@@ -146,19 +148,19 @@ export const getSiteChromeViewModel = cache(async (locale: Locale): Promise<Site
 });
 
 export const getHomepageViewModel = cache(async (locale: Locale) => {
-  const [homepage, projects, settings] = await Promise.all([
+  const [homepage, projects, settings, testimonials] = await Promise.all([
     contentRepository.getHomepage(locale),
     contentRepository.getFeaturedProjects(locale),
     contentRepository.getSiteSettings(locale),
+    contentRepository.getTestimonials(locale),
   ]);
 
   const featuredProjectCards = projects.slice(0, 4).map((project) => projectCard(project));
-  const homepageProjectCards = featuredProjectCards.length
-    ? Array.from(
-        { length: 4 },
-        (_, index) => featuredProjectCards[index % featuredProjectCards.length],
-      )
-    : [];
+  const homepageProjectCards = featuredProjectCards;
+  const employment = settings.identity.employment;
+  const localizedEmployment = employment?.enabled && employment.translations[locale]
+    ? { ...employment.translations[locale]!, url: employment.url }
+    : undefined;
 
   return {
     intro: {
@@ -171,6 +173,7 @@ export const getHomepageViewModel = cache(async (locale: Locale) => {
     hero: {
       locale,
       ...homepage.hero,
+      employment: localizedEmployment,
       primaryAction: { label: homepage.hero.primaryActionLabel, href: pageHref(locale, homepage.actions.primaryTarget) },
       secondaryAction: { label: homepage.hero.secondaryActionLabel, href: pageHref(locale, homepage.actions.secondaryTarget) },
       profile: settings.identity.profileSrc && settings.identity.profileWidth && settings.identity.profileHeight
@@ -188,10 +191,12 @@ export const getHomepageViewModel = cache(async (locale: Locale) => {
       locale,
       intro: sectionIntro(homepage.sections, "about-preview"),
       ...homepage.about,
+      employment: localizedEmployment,
       profile: settings.identity.profileSrc && settings.identity.profileWidth && settings.identity.profileHeight
         ? { src: settings.identity.profileSrc, width: settings.identity.profileWidth, height: settings.identity.profileHeight, alt: homepage.about.profileAlt }
         : undefined,
     },
+    testimonials: { locale, ...homepage.testimonials, items: testimonials },
     contact: {
       locale,
       intro: sectionIntro(homepage.sections, "contact-cta"),
@@ -206,13 +211,7 @@ export const getWorkArchiveViewModel = cache(async (locale: Locale) => {
     contentRepository.getProjects(locale),
   ]);
   const projectCards = projects.map((project) => projectCard(project));
-  const items = projectCards.length > 0 && projectCards.length < 4
-    ? Array.from({ length: 4 }, (_, index) => {
-        const project = projects[index % projects.length];
-        const mediaIndex = Math.floor(index / projects.length);
-        return projectCard(project, project.media[mediaIndex]);
-      })
-    : projectCards;
+  const items = projectCards;
   const filters = Array.from(new Map(items.map((item) => [item.filterKey, item.filterLabel])), ([key, label]) => ({ key, label }));
   return {
     locale,
@@ -234,10 +233,10 @@ export const getWorkArchiveViewModel = cache(async (locale: Locale) => {
   };
 });
 
-export const getProjectViewModel = cache(async (locale: Locale, slug: string) => {
-  const project = await contentRepository.getProjectBySlug(locale, slug);
+export const getProjectViewModel = cache(async (locale: Locale, slug: string, repository: ContentRepository = contentRepository) => {
+  const project = await repository.getProjectBySlug(locale, slug);
   if (!project) return null;
-  const all = await contentRepository.getProjects(locale);
+  const all = await repository.getProjects(locale);
   const index = all.findIndex((candidate) => candidate.id === project.id);
   const previous = index > 0 ? all[index - 1] : all.at(-1);
   const next = index < all.length - 1 ? all[index + 1] : all[0];
@@ -260,6 +259,9 @@ export const getProjectViewModel = cache(async (locale: Locale, slug: string) =>
       challenge: project.challenge,
       solution: project.solution,
       role: project.role,
+      attribution: project.attribution?.kind === "agency" && project.attribution.translations[locale]
+        ? { ...project.attribution.translations[locale]!, url: project.attribution.agencyUrl }
+        : undefined,
       dateLabel,
       technologies: project.technologies,
       cover: projectCover(project),
@@ -338,13 +340,13 @@ export const getBlogArchiveViewModel = cache(async (locale: Locale) => {
   };
 });
 
-export const getPostViewModel = cache(async (locale: Locale, slug: string) => {
-  const post = await contentRepository.getPostBySlug(locale, slug);
+export const getPostViewModel = cache(async (locale: Locale, slug: string, repository: ContentRepository = contentRepository) => {
+  const post = await repository.getPostBySlug(locale, slug);
   if (!post) return null;
   const cover = postCover(post);
   const [categories, posts] = await Promise.all([
-    contentRepository.getCategories(locale),
-    contentRepository.getPosts(locale),
+    repository.getCategories(locale),
+    repository.getPosts(locale),
   ]);
   const categoriesById = categoryMap(categories);
   const related = posts.filter((candidate) => candidate.id !== post.id && candidate.categoryIds.some((id) => post.categoryIds.includes(id))).slice(0, 2);
@@ -358,6 +360,7 @@ export const getPostViewModel = cache(async (locale: Locale, slug: string) => {
     } satisfies PageIntroViewModel,
     dateLabel: post.publishedAt ? new Intl.DateTimeFormat(locale, { year: "numeric", month: "long", day: "numeric" }).format(new Date(post.publishedAt)) : "",
     publishedAt: post.publishedAt,
+    updatedAt: post.updatedAt,
     body: post.content,
     cover,
     toc: post.content.flatMap((block) => block.type === "heading" ? [{ id: block.id, text: block.text, level: block.level }] : []),

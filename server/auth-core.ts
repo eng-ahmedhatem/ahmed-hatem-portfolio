@@ -15,6 +15,8 @@ export interface AdminIdentity {
   id: string;
   email: string;
   displayName: string;
+  mfaVerified?: boolean;
+  sessionVersion?: string;
 }
 
 function sessionKey() {
@@ -24,8 +26,8 @@ function sessionKey() {
   return new TextEncoder().encode(serverConfig.sessionSecret);
 }
 
-function isAdministrator(user: { app_metadata?: Record<string, unknown> }) {
-  return user.app_metadata?.role === "admin";
+export function isActiveAdministrator(user: { app_metadata?: Record<string, unknown>; banned_until?: string }) {
+  return user.app_metadata?.role === "admin" && !(user.banned_until && Date.parse(user.banned_until) > Date.now());
 }
 
 function displayNameFor(user: { user_metadata?: Record<string, unknown> }) {
@@ -34,7 +36,7 @@ function displayNameFor(user: { user_metadata?: Record<string, unknown> }) {
 }
 
 export async function createSessionToken(user: AdminIdentity) {
-  return new SignJWT({ email: user.email, name: user.displayName, role: "admin" })
+  return new SignJWT({ email: user.email, name: user.displayName, role: "admin", mfa: user.mfaVerified === true, version: user.sessionVersion ?? "initial" })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
     .setJti(randomUUID())
@@ -50,8 +52,11 @@ export async function verifySessionToken(token: string): Promise<AdminIdentity |
     if (!payload.sub) return null;
     const { data, error } = await getSupabaseAdmin().auth.admin.getUserById(payload.sub);
     const user = data.user;
-    if (error || !user || !user.email || !isAdministrator(user)) return null;
-    return { id: user.id, email: user.email, displayName: displayNameFor(user) };
+    if (error || !user || !user.email || !isActiveAdministrator(user)) return null;
+    const version = user.app_metadata.session_version ?? "initial";
+    if ((payload.version ?? "initial") !== version) return null;
+    if (user.factors?.some((factor) => factor.status === "verified") && payload.mfa !== true) return null;
+    return { id: user.id, email: user.email, displayName: displayNameFor(user), mfaVerified: payload.mfa === true, sessionVersion: version };
   } catch {
     return null;
   }
@@ -68,7 +73,7 @@ export async function seedAdministrator() {
   const existing = listed.users.find((user) => user.email?.toLowerCase() === serverConfig.adminEmail);
 
   if (existing) {
-    if (!isAdministrator(existing) || displayNameFor(existing) !== ADMIN_DISPLAY_NAME) {
+    if (existing.app_metadata?.role !== "admin" || displayNameFor(existing) !== ADMIN_DISPLAY_NAME) {
       const { error } = await admin.updateUserById(existing.id, {
         app_metadata: { ...existing.app_metadata, role: "admin" },
         user_metadata: { ...existing.user_metadata, display_name: ADMIN_DISPLAY_NAME },
@@ -96,6 +101,8 @@ export async function verifyCredentials(email: string, password: string): Promis
     password,
   });
   const user = data.user;
-  if (error || !user || !user.email || !isAdministrator(user)) return null;
-  return { id: user.id, email: user.email, displayName: displayNameFor(user) };
+  if (error || !user || !user.email || !isActiveAdministrator(user)) return null;
+  // Legacy callers must never bypass an enrolled second factor.
+  if (user.factors?.some((factor) => factor.status === "verified")) return null;
+  return { id: user.id, email: user.email, displayName: displayNameFor(user), sessionVersion: user.app_metadata.session_version ?? "initial" };
 }

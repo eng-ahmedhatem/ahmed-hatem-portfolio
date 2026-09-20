@@ -21,6 +21,7 @@ export function ContactForm({ copy, locale }: { copy: ContactFormTranslation; lo
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (pending) return;
     setMessage("");
     const data = new FormData(event.currentTarget);
     const submission: ContactSubmission = {
@@ -33,6 +34,7 @@ export function ContactForm({ copy, locale }: { copy: ContactFormTranslation; lo
       preferredContact: String(data.get("preferredContact") ?? "").trim() || undefined,
       locale,
       pagePath: window.location.pathname,
+      website: String(data.get("website") ?? ""),
     };
     const nextErrors: Errors = {};
     if (!submission.name) nextErrors.name = copy.requiredLabel;
@@ -57,6 +59,7 @@ export function ContactForm({ copy, locale }: { copy: ContactFormTranslation; lo
   const errorFor = (name: FieldName) => errors[name] ? `${name}-error` : undefined;
   return (
     <form ref={formRef} className={styles.form} noValidate onSubmit={handleSubmit}>
+      <div hidden aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
       <div className={styles.twoColumn}>
         <label><span>{copy.nameLabel}</span><input name="name" autoComplete="name" aria-invalid={Boolean(errors.name)} aria-describedby={errorFor("name")} />{errors.name ? <small id="name-error">{errors.name}</small> : null}</label>
         <label><span>{copy.emailLabel}</span><input name="email" type="email" inputMode="email" autoComplete="email" spellCheck={false} aria-invalid={Boolean(errors.email)} aria-describedby={errorFor("email")} />{errors.email ? <small id="email-error">{errors.email}</small> : null}</label>

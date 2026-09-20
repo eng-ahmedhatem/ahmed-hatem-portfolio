@@ -1,12 +1,19 @@
 import { createHmac, randomUUID } from "node:crypto";
 
 import { z } from "zod";
+import { requestLimit } from "./rate-limit";
+import { handleAuthRequest, handleAdminSecurity } from "./security-handler";
+import { notifyContact } from "./mail";
+import { readRequestJson } from "./request-body";
+import { analyticsLocation } from "./analytics-event";
+import { withEmploymentDefaults } from "../src/data/defaults/employment";
+import { withTestimonialsDefaults } from "../src/data/defaults/testimonials";
+import { withHomepageCopyDefaults } from "../src/data/defaults/homepage-copy";
+import type { Homepage, SiteSettings } from "../src/domain/content/types";
 
 import {
   SESSION_COOKIE,
   SESSION_TTL_SECONDS,
-  createSessionToken,
-  verifyCredentials,
   verifySessionToken,
   type AdminIdentity,
 } from "./auth-core";
@@ -16,8 +23,6 @@ import { getBundledSnapshot, getPublicSnapshot, validateContentPayload } from ".
 import { CONTENT_KINDS, type ContentKind } from "./models";
 import { getAssetBucketName, getSupabaseAdmin, isDatabaseReady } from "./supabase";
 
-const loginAttempts = new Map<string, { count: number; resetAt: number }>();
-const loginSchema = z.object({ email: z.string().email().max(320), password: z.string().min(1).max(256) });
 const contactSchema = z.object({
   name: z.string().trim().min(1).max(160),
   email: z.string().trim().email().max(320),
@@ -28,6 +33,7 @@ const contactSchema = z.object({
   preferredContact: z.string().trim().max(120).optional(),
   locale: z.enum(["ar", "en"]),
   pagePath: z.string().startsWith("/").max(500),
+  website: z.string().max(500).optional(),
 });
 const analyticsSchema = z.object({
   visitorId: z.string().min(16).max(160),
@@ -59,6 +65,7 @@ interface ContactRow {
   preferred_contact: string | null;
   locale: "ar" | "en";
   page_path: string;
+  notification_status?: string;
   status: "new" | "read" | "archived";
   created_at: string;
   updated_at: string;
@@ -98,9 +105,7 @@ function empty(status = 204, headers?: HeadersInit) {
 }
 
 function requestOrigin(request: Request) {
-  const forwardedHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
-  const forwardedProtocol = request.headers.get("x-forwarded-proto") ?? new URL(request.url).protocol.replace(":", "");
-  return forwardedHost ? `${forwardedProtocol}://${forwardedHost}` : new URL(request.url).origin;
+  return new URL(request.url).origin;
 }
 
 function trustedMutation(request: Request) {
@@ -119,7 +124,7 @@ function cookieValue(request: Request, name: string) {
   for (const cookie of cookies) {
     const separator = cookie.indexOf("=");
     if (separator < 0 || cookie.slice(0, separator).trim() !== name) continue;
-    return decodeURIComponent(cookie.slice(separator + 1).trim());
+    try { return decodeURIComponent(cookie.slice(separator + 1).trim()); } catch { return undefined; }
   }
   return undefined;
 }
@@ -147,23 +152,6 @@ function isAdminClient(request: Request) {
   return request.headers.get("x-portfolio-admin") === "1";
 }
 
-function rateLimitKey(request: Request) {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    ?? request.headers.get("x-real-ip")
-    ?? "unknown";
-}
-
-function canAttemptLogin(key: string) {
-  const now = Date.now();
-  const current = loginAttempts.get(key);
-  if (!current || current.resetAt <= now) {
-    loginAttempts.set(key, { count: 1, resetAt: now + 15 * 60_000 });
-    return { allowed: true, retryAfter: 0 };
-  }
-  current.count += 1;
-  return { allowed: current.count <= 8, retryAfter: Math.max(1, Math.ceil((current.resetAt - now) / 1_000)) };
-}
-
 function classifyDevice(userAgent: string) {
   if (/ipad|tablet|playbook|silk/i.test(userAgent) || (/android/i.test(userAgent) && !/mobile/i.test(userAgent))) return "tablet" as const;
   if (/mobile|iphone|ipod|android/i.test(userAgent)) return "mobile" as const;
@@ -183,11 +171,13 @@ function detectedImageMimeType(buffer: Buffer) {
 }
 
 function toContentRecord(row: ContentRow) {
+  if (row.kind === "homepage") row = { ...row, payload: withHomepageCopyDefaults(withTestimonialsDefaults(row.payload as unknown as Homepage)) as unknown as Record<string, unknown> };
+  if (row.kind === "site-settings") row = { ...row, payload: withEmploymentDefaults(row.payload as unknown as SiteSettings) as unknown as Record<string, unknown> };
   return { _id: row.id, kind: row.kind, entityId: row.entity_id, payload: row.payload, updatedBy: row.updated_by ?? undefined, createdAt: row.created_at, updatedAt: row.updated_at };
 }
 
 function toContactItem(row: ContactRow) {
-  return { _id: row.id, name: row.name, email: row.email, phone: row.phone ?? undefined, service: row.service, budget: row.budget ?? undefined, details: row.details, preferredContact: row.preferred_contact ?? undefined, locale: row.locale, pagePath: row.page_path, status: row.status, createdAt: row.created_at, updatedAt: row.updated_at };
+  return { _id: row.id, name: row.name, email: row.email, phone: row.phone ?? undefined, service: row.service, budget: row.budget ?? undefined, details: row.details, preferredContact: row.preferred_contact ?? undefined, locale: row.locale, pagePath: row.page_path, status: row.status, notificationStatus: row.notification_status, createdAt: row.created_at, updatedAt: row.updated_at };
 }
 
 function throwSupabaseError(error: { message: string } | null, context: string) {
@@ -200,7 +190,7 @@ async function writeAudit(admin: AdminIdentity, action: string, entityKind?: str
 }
 
 async function requestJson(request: Request) {
-  try { return await request.json() as Record<string, unknown>; } catch { return {}; }
+  return readRequestJson(request, new URL(request.url).pathname.includes("/admin/") ? 4 * 1024 * 1024 : 64 * 1024);
 }
 
 async function ensureDatabase() {
@@ -237,39 +227,17 @@ export async function handleCmsRequest(request: Request, path: readonly string[]
     }
   }
 
-  if ((route === "auth/login" || route === "auth/logout" || route.startsWith("admin/")) && !isAdminClient(request)) {
+  if ((route.startsWith("auth/") || route.startsWith("admin/")) && !isAdminClient(request)) {
     return json({ error: "Invalid administration request." }, 403);
   }
-  if (method !== "GET" && (route === "auth/login" || route === "auth/logout") && !trustedMutation(request)) {
+  if (method !== "GET" && (route.startsWith("auth/") || route.startsWith("admin/")) && !trustedMutation(request)) {
     return json({ error: "Untrusted request origin." }, 403);
   }
 
   if (!(await ensureDatabase())) return json({ error: "The Supabase data service is not configured." }, 503);
 
-  if (method === "POST" && route === "auth/login") {
-    if (!isAdminClient(request)) return json({ error: "Invalid administration request." }, 403);
-    if (!trustedMutation(request)) return json({ error: "Untrusted request origin." }, 403);
-    const attempt = canAttemptLogin(rateLimitKey(request));
-    if (!attempt.allowed) return json({ error: "Too many sign-in attempts. Try again later." }, 429, { "Retry-After": String(attempt.retryAfter) });
-    const parsed = loginSchema.safeParse(await requestJson(request));
-    if (!parsed.success) return json({ error: "Invalid sign-in details." }, 400);
-    const startedAt = Date.now();
-    const admin = await verifyCredentials(parsed.data.email, parsed.data.password);
-    if (!admin) {
-      const remainingDelay = Math.max(0, 350 - (Date.now() - startedAt));
-      if (remainingDelay) await new Promise((resolve) => setTimeout(resolve, remainingDelay));
-      return json({ error: "Email or password is incorrect." }, 401);
-    }
-    loginAttempts.delete(rateLimitKey(request));
-    await writeAudit(admin, "auth.login", "admin-user", admin.id);
-    return json({ user: { email: admin.email, displayName: admin.displayName } }, 200, { "Set-Cookie": sessionCookie(await createSessionToken(admin)) });
-  }
-
-  if (method === "POST" && route === "auth/logout") {
-    if (!isAdminClient(request)) return json({ error: "Invalid administration request." }, 403);
-    if (!trustedMutation(request)) return json({ error: "Untrusted request origin." }, 403);
-    return empty(204, { "Set-Cookie": sessionCookie("", true) });
-  }
+  const authResponse = await handleAuthRequest(request, route);
+  if (authResponse) return authResponse;
 
   if (method === "GET" && route === "auth/me") {
     const admin = await adminFor(request);
@@ -281,6 +249,34 @@ export async function handleCmsRequest(request: Request, path: readonly string[]
     if (authorization.response) return authorization.response;
     const admin = authorization.admin as AdminIdentity;
     const supabase = getSupabaseAdmin();
+    const securityResponse = await handleAdminSecurity(request, route, admin);
+    if (securityResponse) return securityResponse;
+
+    if (method === "GET" && route === "admin/backup") {
+      const { data, error } = await supabase.from("content_records").select("kind,entity_id,payload,updated_at").order("kind");
+      throwSupabaseError(error, "Unable to export content");
+      return json({ schemaVersion: 1, exportedAt: new Date().toISOString(), records: data ?? [] });
+    }
+    if (method === "POST" && route === "admin/backup/validate") {
+      const backup = z.object({ schemaVersion: z.literal(1), records: z.array(z.object({ kind: z.enum(CONTENT_KINDS), entity_id: entityIdSchema, payload: z.unknown() })).max(2000) }).safeParse(await requestJson(request));
+      if (!backup.success) return json({ error: "صيغة النسخة غير صالحة." }, 400);
+      const seen = new Set<string>();
+      for (const record of backup.data.records) {
+        const parsed = validateContentPayload(record.kind, record.payload);
+        const key = `${record.kind}:${record.entity_id}`;
+        if (!parsed.success || parsed.data.id !== record.entity_id || seen.has(key)) return json({ error: `راجع بيانات ${record.kind} / ${record.entity_id}.` }, 400);
+        seen.add(key);
+      }
+      return json({ valid: true, records: backup.data.records.length });
+    }
+
+    if (method === "POST" && path[1] === "contacts" && path[3] === "notify") {
+      if (!z.string().uuid().safeParse(path[2]).success) return json({ error: "Invalid message." }, 400);
+      const limited = await requestLimit(request, "contact-notification", 10, 900);
+      if (limited) return limited;
+      const status = await notifyContact(path[2]);
+      return status === "sent" ? json({ sent: true }) : json({ error: status === "disabled" ? "بريد التنبيهات غير مهيأ بعد." : "تعذّر إرسال التنبيه؛ الطلب ما زال محفوظًا." }, 503);
+    }
 
     if (method === "GET" && route === "admin/content") {
       const kind = new URL(request.url).searchParams.get("kind");
@@ -372,13 +368,22 @@ export async function handleCmsRequest(request: Request, path: readonly string[]
     }
 
     if (method === "GET" && route === "admin/contacts") {
-      const page = Math.max(1, Number(new URL(request.url).searchParams.get("page")) || 1);
+      const params = new URL(request.url).searchParams;
+      const page = Math.min(100000, Math.max(1, Math.floor(Number(params.get("page")) || 1)));
+      const status = params.get("status");
+      if (status && !["new", "read", "archived"].includes(status)) return json({ error: "Invalid status." }, 400);
       const limit = 20;
       const from = (page - 1) * limit;
-      const { data, error, count } = await supabase.from("contact_submissions").select("*", { count: "exact" }).order("created_at", { ascending: false }).range(from, from + limit - 1);
+      let query = supabase.from("contact_submissions").select("*", { count: "exact" }).order("created_at", { ascending: false }).order("id", { ascending: false });
+      if (status) query = query.eq("status", status);
+      const [{ data, error, count }, unread] = await Promise.all([
+        query.range(from, from + limit - 1),
+        supabase.from("contact_submissions").select("id", { count: "exact", head: true }).eq("status", "new"),
+      ]);
       throwSupabaseError(error, "Unable to read contact submissions");
       const total = count ?? 0;
-      return json({ items: ((data ?? []) as ContactRow[]).map(toContactItem), total, page, pages: Math.max(1, Math.ceil(total / limit)) });
+      throwSupabaseError(unread.error, "Unable to count unread messages");
+      return json({ items: ((data ?? []) as ContactRow[]).map(toContactItem), total, newCount: unread.count ?? 0, page, pages: Math.max(1, Math.ceil(total / limit)) });
     }
 
     if (method === "PATCH" && path[1] === "contacts" && path.length === 3) {
@@ -403,9 +408,12 @@ export async function handleCmsRequest(request: Request, path: readonly string[]
 
   if (method === "POST" && route === "contact") {
     if (!trustedMutation(request)) return json({ error: "Untrusted request origin." }, 403);
+    const limited = await requestLimit(request, "contact", 5, 900);
+    if (limited) return limited;
     const parsed = contactSchema.safeParse(await requestJson(request));
     if (!parsed.success) return json({ error: "Please review the required contact fields." }, 400);
     const input = parsed.data;
+    if (input.website) return json({ delivered: true }, 201);
     const { data, error } = await getSupabaseAdmin().from("contact_submissions").insert({ name: input.name, email: input.email.toLowerCase(), phone: input.phone || null, service: input.service, budget: input.budget || null, details: input.details, preferred_contact: input.preferredContact || null, locale: input.locale, page_path: input.pagePath }).select("id").single();
     throwSupabaseError(error, "Unable to save the contact submission");
     return json({ delivered: true, id: data?.id }, 201);
@@ -413,13 +421,18 @@ export async function handleCmsRequest(request: Request, path: readonly string[]
 
   if (method === "POST" && route === "analytics") {
     if (!trustedMutation(request)) return json({ error: "Untrusted request origin." }, 403);
+    if (request.headers.get("dnt") === "1") return empty();
     const parsed = analyticsSchema.safeParse(await requestJson(request));
     if (!parsed.success) return json({ error: "Invalid analytics event." }, 400);
     if (!serverConfig.analyticsSalt) return json({ error: "Analytics is not configured." }, 503);
     const userAgent = request.headers.get("user-agent") ?? "";
     if (isLikelyBot(userAgent)) return empty();
+    const location = analyticsLocation(parsed.data.path, parsed.data.locale, parsed.data.referrer);
+    if (!location) return empty();
+    const limited = await requestLimit(request, "analytics", 120, 60);
+    if (limited) return limited;
     const visitorHash = createHmac("sha256", serverConfig.analyticsSalt).update(parsed.data.visitorId).digest("hex");
-    const { error } = await getSupabaseAdmin().from("page_views").insert({ visitor_hash: visitorHash, path: parsed.data.path, locale: parsed.data.locale, referrer: parsed.data.referrer || null, device: classifyDevice(userAgent) });
+    const { error } = await getSupabaseAdmin().from("page_views").insert({ visitor_hash: visitorHash, ...location, locale: parsed.data.locale, device: classifyDevice(userAgent) });
     throwSupabaseError(error, "Unable to record the analytics event");
     return empty();
   }

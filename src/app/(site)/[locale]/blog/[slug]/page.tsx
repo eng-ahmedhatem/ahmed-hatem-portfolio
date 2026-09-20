@@ -67,6 +67,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           post.intro.seo,
           path,
           post.publishedAt,
+          post.updatedAt,
+          post.cover.src,
         )}
       />
       <BlogArticle post={post} />

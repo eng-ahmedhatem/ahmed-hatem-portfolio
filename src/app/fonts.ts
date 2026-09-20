@@ -20,6 +20,7 @@ const arabicBodyFont = localFont({
   ],
   variable: "--font-ar-body",
   display: "swap",
+  preload: false,
   fallback: ["Arial"],
 });
 
@@ -29,6 +30,7 @@ const arabicDisplayFont = localFont({
   weight: "500 700",
   style: "normal",
   display: "swap",
+  preload: false,
   fallback: ["Arial"],
 });
 

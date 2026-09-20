@@ -29,6 +29,7 @@ const repository = cache(async (): Promise<MockContentRepository> => {
 });
 
 export class ApiContentRepository implements ContentRepository {
+  async getTestimonials(locale: Locale) { return (await repository()).getTestimonials(locale); }
   async getSiteSettings(locale: Locale) { return (await repository()).getSiteSettings(locale); }
   async getHomepage(locale: Locale) { return (await repository()).getHomepage(locale); }
   async getProjects(locale: Locale) { return (await repository()).getProjects(locale); }

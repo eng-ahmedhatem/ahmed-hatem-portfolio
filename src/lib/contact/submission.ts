@@ -10,6 +10,7 @@ export interface ContactSubmission {
   preferredContact?: string;
   locale: Locale;
   pagePath: string;
+  website?: string;
 }
 
 export interface ContactSubmissionAdapter {

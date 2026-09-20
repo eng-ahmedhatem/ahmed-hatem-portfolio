@@ -50,11 +50,13 @@ export function createHomepageStructuredData(locale: Locale, seo: SeoMetadata, p
 }
 
 export function createProjectStructuredData(locale: Locale, seo: SeoMetadata, path: string, image?: string) {
+  const url = absoluteUrl(path);
   return {
     "@context": "https://schema.org",
     "@type": "CreativeWork",
-    "@id": `${absoluteUrl(path)}#project`,
-    url: absoluteUrl(path),
+    "@id": `${url}#project`,
+    url,
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
     name: seo.title,
     description: seo.description,
     inLanguage: locale,
@@ -62,16 +64,31 @@ export function createProjectStructuredData(locale: Locale, seo: SeoMetadata, pa
   };
 }
 
-export function createBlogPostingStructuredData(locale: Locale, seo: SeoMetadata, path: string, publishedAt?: string) {
+export function createBlogPostingStructuredData(
+  locale: Locale,
+  seo: SeoMetadata,
+  path: string,
+  publishedAt?: string,
+  updatedAt?: string,
+  image?: string,
+) {
+  const url = absoluteUrl(path);
   return {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    "@id": `${absoluteUrl(path)}#article`,
-    url: absoluteUrl(path),
+    "@id": `${url}#article`,
+    url,
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
     headline: seo.title,
     description: seo.description,
     inLanguage: locale,
     datePublished: publishedAt,
-    author: { "@type": "Person", name: locale === "ar" ? "أحمد حاتم" : "Ahmed Hatem" },
+    dateModified: updatedAt ?? publishedAt,
+    image: image ? absoluteUrl(image) : undefined,
+    author: {
+      "@type": "Person",
+      name: locale === "ar" ? "أحمد حاتم" : "Ahmed Hatem",
+      url: absoluteUrl(`/${locale}`),
+    },
   };
 }

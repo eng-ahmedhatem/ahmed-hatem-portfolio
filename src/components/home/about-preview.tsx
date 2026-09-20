@@ -20,6 +20,7 @@ interface AboutPreviewProps {
     summary: string;
     primarySkill: string;
     secondarySkills: readonly string[];
+    employment?: { label: string; role: string; company: string; description: string; url: string };
     profile?: { src: string; width: number; height: number; alt: string };
   };
 }
@@ -57,6 +58,7 @@ export function AboutPreview({ about }: AboutPreviewProps) {
     <section
       ref={sectionRef}
       id="about"
+      tabIndex={-1}
       className={styles.section}
       aria-labelledby={`${about.intro.id}-title`}
     >
@@ -85,6 +87,12 @@ export function AboutPreview({ about }: AboutPreviewProps) {
           </p>
           <h2 id={`${about.intro.id}-title`}>{about.title}</h2>
           <p className={styles.summary}>{about.summary}</p>
+          {about.employment ? <aside className={styles.employment}>
+            <span>{about.employment.label}</span>
+            <a href={about.employment.url} target="_blank" rel="noopener noreferrer">{about.employment.company}<span aria-hidden="true"> ↗</span></a>
+            <strong>{about.employment.role}</strong>
+            <p>{about.employment.description}</p>
+          </aside> : null}
           <ul className={styles.skills}>
             {about.secondarySkills.map((skill) => (
               <li key={skill} translate="no">

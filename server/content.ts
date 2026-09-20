@@ -1,5 +1,7 @@
-import type { BlogCategory, BlogPost, Homepage, Project, SiteSettings, StaticPage } from "../src/domain/content/types";
+import type { BlogCategory, BlogPost, Homepage, Project, SiteSettings, StaticPage, Testimonial } from "../src/domain/content/types";
 import { z } from "zod";
+import { withEmploymentDefaults } from "../src/data/defaults/employment";
+import { isPublicPost, isPublicProject, isPublicTestimonial } from "../src/domain/content/publication";
 import { mockCategories } from "../src/data/mock/categories";
 import { mockHomepage } from "../src/data/mock/homepage";
 import { mockStaticPages } from "../src/data/mock/pages";
@@ -107,6 +109,11 @@ const contentSchemas: Record<ContentKind, z.ZodType<Record<string, unknown>>> = 
   "site-settings": z.object({
     id: idSchema,
     identity: z.object({
+      employment: z.object({
+        enabled: z.boolean(),
+        url: publicUrlSchema,
+        translations: bilingual(z.object({ label: shortText, role: shortText, company: shortText, description: z.string().max(2000) })),
+      }).optional(),
       email: z.string().email().max(320).optional(),
       logoSrc: safeResourceSchema.optional(),
       logoWidth: z.number().int().positive().optional(),
@@ -114,6 +121,13 @@ const contentSchemas: Record<ContentKind, z.ZodType<Record<string, unknown>>> = 
       profileSrc: safeResourceSchema.optional(),
       profileWidth: z.number().int().positive().optional(),
       profileHeight: z.number().int().positive().optional(),
+      searchConsole: z.object({
+        propertyUrl: z.union([z.literal(""), publicUrlSchema]).optional(),
+        verificationToken: z.string().trim().max(512).refine(
+          (value) => !/[<>]/.test(value),
+          "The Search Console verification token must not contain HTML.",
+        ).optional(),
+      }).optional(),
       socialLinks: z.array(z.object({ id: idSchema, label: shortText, url: publicUrlSchema })).max(20),
     }),
     translations: bilingual(z.object({
@@ -143,6 +157,10 @@ const contentSchemas: Record<ContentKind, z.ZodType<Record<string, unknown>>> = 
   }).passthrough(),
   homepage: z.object({
     id: idSchema,
+    testimonials: z.object({
+      enabled: z.boolean(),
+      translations: bilingual(z.object({ eyebrow: shortText, title: shortText, summary: z.string().max(2000), sourceLabel: shortText })),
+    }).optional(),
     actions: z.object({ primaryTarget: z.enum(["home", "work", "blog", "about", "contact"]), secondaryTarget: z.enum(["home", "work", "blog", "about", "contact"]) }),
     translations: bilingual(z.object({
       hero: z.object({
@@ -182,6 +200,12 @@ const contentSchemas: Record<ContentKind, z.ZodType<Record<string, unknown>>> = 
   }).passthrough(),
   project: z.object({
     id: idSchema,
+    attribution: z.object({
+      kind: z.enum(["independent", "agency"]),
+      agencyUrl: z.union([z.literal(""), publicUrlSchema]).optional(),
+      permissionConfirmed: z.boolean(),
+      translations: bilingual(z.object({ agencyName: z.string().max(320), contribution: z.string().max(2000), notice: z.string().max(2000) })),
+    }).optional(),
     status: z.enum(["draft", "published"]).optional(),
     implementationDate: z.string().max(120).optional(),
     filterKey: idSchema,
@@ -194,6 +218,13 @@ const contentSchemas: Record<ContentKind, z.ZodType<Record<string, unknown>>> = 
     translations: bilingual(projectTranslationSchema),
     updatedAt: dateSchema,
   }).passthrough().superRefine((project, context) => {
+    if (project.status !== "draft" && project.attribution?.kind === "agency") {
+      if (!project.attribution.permissionConfirmed) context.addIssue({ code: "custom", path: ["attribution", "permissionConfirmed"], message: "احفظ المشروع كمسودة إلى أن تتأكد من سماح الشركة والعميل بعرضه." });
+      for (const locale of ["ar", "en"] as const) {
+        const credit = project.attribution.translations[locale];
+        if (!credit.agencyName.trim() || !credit.contribution.trim() || !credit.notice.trim()) context.addIssue({ code: "custom", path: ["attribution", "translations", locale], message: "وضّح جهة التنفيذ ومساهمتك وحقوق العرض باللغتين." });
+      }
+    }
     if (!project.media.some((asset) => asset.id === project.coverMediaId)) {
       context.addIssue({ code: "custom", path: ["coverMediaId"], message: "The cover image must exist in the project media gallery." });
     }
@@ -222,6 +253,23 @@ const contentSchemas: Record<ContentKind, z.ZodType<Record<string, unknown>>> = 
     }
   }),
   category: z.object({ id: idSchema, translations: bilingual(categoryTranslationSchema), updatedAt: dateSchema }).passthrough(),
+  testimonial: z.object({
+    id: idSchema,
+    status: z.enum(["draft", "published"]),
+    featured: z.boolean(),
+    featuredOrder: z.number().int().min(1).max(100),
+    consentConfirmed: z.boolean(),
+    sourceUrl: z.union([z.literal(""), publicUrlSchema]).optional(),
+    avatar: mediaAssetSchema.optional(),
+    translations: bilingual(z.object({ name: z.string().trim().max(160), role: z.string().trim().max(160), company: z.string().trim().max(160), quote: z.string().trim().max(1600) })),
+    updatedAt: dateSchema,
+  }).superRefine((item, context) => {
+    if (item.status !== "published") return;
+    if (!item.consentConfirmed) context.addIssue({ code: "custom", path: ["consentConfirmed"], message: "تأكد من إذن صاحب الرأي بعرض اسمه ونصه وصورته قبل النشر." });
+    for (const locale of ["ar", "en"] as const) {
+      if (!item.translations[locale].name || !item.translations[locale].quote) context.addIssue({ code: "custom", path: ["translations", locale], message: "أضف اسم صاحب الرأي ونصه باللغتين قبل النشر." });
+    }
+  }),
 };
 
 export function validateContentPayload(kind: ContentKind, payload: unknown) {
@@ -229,6 +277,7 @@ export function validateContentPayload(kind: ContentKind, payload: unknown) {
 }
 
 export interface PublicContentSnapshot {
+  testimonials: readonly Testimonial[];
   siteSettings: SiteSettings;
   homepage: Homepage;
   staticPages: readonly StaticPage[];
@@ -248,17 +297,22 @@ const seeds: readonly { kind: ContentKind; entityId: string; payload: Record<str
 
 export function getBundledSnapshot(): PublicContentSnapshot {
   return {
-    siteSettings: mockSiteSettings,
+    testimonials: [],
+    siteSettings: withEmploymentDefaults(mockSiteSettings),
     homepage: mockHomepage,
     staticPages: mockStaticPages,
-    projects: mockProjects,
-    posts: mockPosts,
+    projects: mockProjects.filter(isPublicProject),
+    posts: mockPosts.filter(isPublicPost),
     categories: mockCategories,
   };
 }
 
 export async function seedContent() {
   if (!isDatabaseReady()) return false;
+  // Seed a new installation only; never resurrect a record deleted in the CMS.
+  const existing = await getSupabaseAdmin().from("content_records").select("id", { count: "exact", head: true });
+  if (existing.error) throw new Error("Unable to inspect content initialization.");
+  if (existing.count) return true;
   const { error } = await getSupabaseAdmin()
     .from("content_records")
     .upsert(
@@ -292,11 +346,12 @@ export async function getPublicSnapshot(): Promise<PublicContentSnapshot> {
     records.filter((candidate) => candidate.kind === kind).map((record) => asPayload<T>(record.payload));
 
   return {
-    siteSettings: one<SiteSettings>("site-settings"),
+    siteSettings: withEmploymentDefaults(one<SiteSettings>("site-settings")),
     homepage: one<Homepage>("homepage"),
     staticPages: many<StaticPage>("static-page"),
-    projects: many<Project>("project"),
-    posts: many<BlogPost>("post"),
+    projects: many<Project>("project").filter(isPublicProject),
+    posts: many<BlogPost>("post").filter(isPublicPost),
     categories: many<BlogCategory>("category"),
+    testimonials: many<Testimonial>("testimonial").filter(isPublicTestimonial),
   };
 }

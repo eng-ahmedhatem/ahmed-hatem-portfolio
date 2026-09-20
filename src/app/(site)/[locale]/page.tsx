@@ -4,6 +4,7 @@ import { ContactRequest } from "@/components/contact/contact-request";
 import { AboutPreview } from "@/components/home/about-preview";
 import { Hero } from "@/components/home/hero";
 import { LatestProjects } from "@/components/home/latest-projects";
+import { Testimonials } from "@/components/home/testimonials";
 import { StructuredData } from "@/components/ui/structured-data";
 import { getHomepageViewModel } from "@/features/site/view-models";
 import { localeFromParam } from "@/lib/i18n/locale-param";
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: HomepageProps): Promise<Metad
 
 export default async function Homepage({ params }: HomepageProps) {
   const locale = localeFromParam((await params).locale);
-  const { about, contact, hero, intro, projects } = await getHomepageViewModel(locale);
+  const { about, contact, hero, intro, projects, testimonials } = await getHomepageViewModel(locale);
   const path = intro.alternatePaths[locale] ?? `/${locale}`;
   return (
     <main id="main-content">
@@ -28,6 +29,7 @@ export default async function Homepage({ params }: HomepageProps) {
       <Hero hero={hero} />
       <LatestProjects projects={projects} />
       <AboutPreview about={about} />
+      <Testimonials view={testimonials} />
       <ContactRequest contact={contact} />
     </main>
   );

@@ -10,11 +10,13 @@
     "dev": "next dev",
     "dev:web": "next dev",
     "dev:api": "node server/run-tsx.cjs watch server/index.ts",
+    "admin:password": "node server/run-tsx.cjs server/reset-admin-password.ts",
     "build": "next build",
     "start": "next start",
     "start:api": "node server/run-tsx.cjs server/index.ts",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --import ./tests/setup.mjs --import tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

@@ -1,5 +1,7 @@
 # Codex Portfolio Foundation Pack
 
+For the complete current architecture, implemented features, security model, routes, deployment requirements, and AI handoff state, read [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) first.
+
 Place the contents of this folder at the root of your portfolio repository.
 
 Key files:
@@ -40,7 +42,8 @@ Apply the SQL migration and configure the server-only keys by following `supabas
 For production deployment from GitHub to Vercel, follow `DEPLOY_VERCEL_AR.md`. The CMS API is implemented with Next.js Route Handlers so the public site and administration deploy as one Vercel project; the standalone Express runner remains available only for legacy/local troubleshooting.
 
 Typography:
-- Arabic: IBM Plex Sans Arabic
+- Arabic headings: El Messiri
+- Arabic body, navigation, and controls: Almarai
 - English: Manrope
 
 See:

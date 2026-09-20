@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import type { Metadata } from "next";
 import Script from "next/script";
+import type { ReactNode } from "react";
 
 import { fontVariables } from "@/app/fonts";
 import { AnalyticsTracker } from "@/components/analytics/analytics-tracker";
@@ -26,6 +27,18 @@ const THEME_INITIALIZER = `try{const key="ah-portfolio-theme:v1";const saved=loc
 
 export function generateStaticParams() {
   return SUPPORTED_LOCALES.map((locale) => ({ locale }));
+}
+
+export async function generateMetadata({
+  params,
+}: Pick<LocalizedLayoutProps, "params">): Promise<Metadata> {
+  const locale = localeFromParam((await params).locale);
+  const { settings } = await getSiteChromeViewModel(locale);
+  const googleVerification = settings.identity.searchConsole?.verificationToken?.trim();
+
+  return googleVerification
+    ? { verification: { google: googleVerification } }
+    : {};
 }
 
 export default async function LocalizedLayout({

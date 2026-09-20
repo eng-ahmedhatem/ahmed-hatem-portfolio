@@ -20,6 +20,7 @@ export function AdminLogo({ variant = "sidebar", preload = false }: AdminLogoPro
         sizes={compact ? "76px" : variant === "sidebar" ? "168px" : "(max-width: 768px) 180px, 224px"}
         alt="Ahmed Hatem"
         preload={preload}
+        loading={!preload && variant === "login" ? "eager" : undefined}
       />
     </span>
   );

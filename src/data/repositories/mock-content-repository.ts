@@ -6,6 +6,8 @@ import type {
   Locale,
   LocalizedRouteEntry,
   Project,
+  Testimonial,
+  ResolvedTestimonial,
   ResolvedBlogCategory,
   ResolvedBlogPost,
   ResolvedHomepage,
@@ -17,6 +19,11 @@ import type {
   TranslationState,
 } from "@/domain/content/types";
 import { getDirection } from "@/lib/i18n/config";
+import { withEmploymentDefaults } from "../defaults/employment";
+import { isPublicPost, isPublicProject, isPublicTestimonial } from "../../domain/content/publication";
+import { defaultTestimonials } from "../defaults/testimonials";
+import { contactFeedback } from "../defaults/contact-feedback";
+import { withHomepageCopyDefaults } from "../defaults/homepage-copy";
 
 import { mockCategories } from "../mock/categories";
 import { mockHomepage } from "../mock/homepage";
@@ -26,6 +33,7 @@ import { mockProjects } from "../mock/projects";
 import { mockSiteSettings } from "../mock/site-settings";
 
 export interface ContentSnapshot {
+  testimonials?: readonly Testimonial[];
   siteSettings: SiteSettings;
   homepage: Homepage;
   staticPages: readonly StaticPage[];
@@ -95,7 +103,7 @@ function categoryPaths(category: BlogCategory): TranslationState<string> {
 function resolveProject(project: Project, locale: Locale): ResolvedProject | null {
   const translation = project.translations[locale];
 
-  if (!translation || project.status === "draft") {
+  if (!translation || !isPublicProject(project)) {
     return null;
   }
 
@@ -113,7 +121,7 @@ function resolveProject(project: Project, locale: Locale): ResolvedProject | nul
 function resolvePost(post: BlogPost, locale: Locale): ResolvedBlogPost | null {
   const translation = post.translations[locale];
 
-  if (!translation || post.status !== "published") {
+  if (!translation || !isPublicPost(post)) {
     return null;
   }
 
@@ -152,6 +160,19 @@ function resolveCategory(
 export class MockContentRepository implements ContentRepository {
   constructor(private readonly snapshot: ContentSnapshot = mockSnapshot) {}
 
+  async getTestimonials(locale: Locale): Promise<readonly ResolvedTestimonial[]> {
+    return (this.snapshot.testimonials ?? []).filter(isPublicTestimonial)
+      .filter((item) => item.featured)
+      .sort((a, b) => a.featuredOrder - b.featuredOrder || a.id.localeCompare(b.id))
+      .flatMap((item) => {
+        const translation = item.translations[locale];
+        if (!translation?.name.trim() || !translation.quote.trim()) return [];
+        const { translations, ...shared } = item;
+        void translations;
+        return [{ ...shared, ...translation, locale }];
+      }).slice(0, 6);
+  }
+
   async getSiteSettings(locale: Locale): Promise<ResolvedSiteSettings> {
     const translation = requireTranslation(
       this.snapshot.siteSettings.translations,
@@ -164,18 +185,19 @@ export class MockContentRepository implements ContentRepository {
       id: this.snapshot.siteSettings.id,
       locale,
       direction: getDirection(locale),
-      identity: this.snapshot.siteSettings.identity,
+      identity: withEmploymentDefaults(this.snapshot.siteSettings).identity,
     };
   }
 
   async getHomepage(locale: Locale): Promise<ResolvedHomepage> {
+    const homepage = withHomepageCopyDefaults(this.snapshot.homepage);
     const translation = requireTranslation(
-      this.snapshot.homepage.translations,
+      homepage.translations,
       locale,
       "homepage",
     );
 
-    const sections = this.snapshot.homepage.sections
+    const sections = homepage.sections
       .filter((section) => section.enabled && section.translations[locale])
       .sort((first, second) => first.order - second.order)
       .map((section) => ({
@@ -194,6 +216,11 @@ export class MockContentRepository implements ContentRepository {
       id: this.snapshot.homepage.id,
       locale,
       actions: this.snapshot.homepage.actions,
+      contact: { ...translation.contact, form: contactFeedback(translation.contact.form, locale) },
+      testimonials: {
+        enabled: (this.snapshot.homepage.testimonials ?? defaultTestimonials).enabled,
+        ...(this.snapshot.homepage.testimonials ?? defaultTestimonials).translations[locale],
+      },
       sections,
       alternatePaths: { ar: "/ar", en: "/en" },
     };
@@ -336,7 +363,7 @@ export class MockContentRepository implements ContentRepository {
     ];
 
     const projectRoutes = this.snapshot.projects
-      .filter((project) => project.status !== "draft")
+      .filter(isPublicProject)
       .map<LocalizedRouteEntry>((project) => ({
         id: `route-${project.id}`,
         kind: "project",
@@ -346,7 +373,7 @@ export class MockContentRepository implements ContentRepository {
       }));
 
     const postRoutes = this.snapshot.posts
-      .filter((post) => post.status === "published")
+      .filter(isPublicPost)
       .map<LocalizedRouteEntry>((post) => ({
         id: `route-${post.id}`,
         kind: "post",
@@ -367,6 +394,6 @@ export class MockContentRepository implements ContentRepository {
   }
 
   async getPublishedPostEntities(): Promise<readonly BlogPost[]> {
-    return this.snapshot.posts.filter((post) => post.status === "published");
+    return this.snapshot.posts.filter(isPublicPost);
   }
 }

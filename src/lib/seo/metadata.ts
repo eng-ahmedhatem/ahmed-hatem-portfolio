@@ -55,6 +55,14 @@ export function createLocalizedMetadata({
     metadataBase: getSiteUrl(),
     title: seo.title,
     description: seo.description,
+    authors: [{ name: locale === "ar" ? "أحمد حاتم" : "Ahmed Hatem" }],
+    creator: locale === "ar" ? "أحمد حاتم" : "Ahmed Hatem",
+    publisher: locale === "ar" ? "أحمد حاتم" : "Ahmed Hatem",
+    formatDetection: {
+      email: false,
+      address: false,
+      telephone: false,
+    },
     alternates: {
       canonical,
       languages: languageAlternates,
@@ -62,6 +70,13 @@ export function createLocalizedMetadata({
     robots: {
       index: seo.robots.index,
       follow: seo.robots.follow,
+      googleBot: {
+        index: seo.robots.index,
+        follow: seo.robots.follow,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
     },
     openGraph: {
       type: seo.structuredData?.type === "BlogPosting" ? "article" : "website",

@@ -47,11 +47,8 @@ Mirror only truly directional icons/animations.
 ## Fonts
 
 ### Arabic
-IBM Plex Sans Arabic
-- 400
-- 500
-- 600
-- 700
+- Headings/display: El Messiri (500–700)
+- Body/navigation/controls: Almarai (400/700/800)
 
 ### English
 Manrope
@@ -75,7 +72,7 @@ Support `x-default`.
 
 Never canonicalize Arabic to English or English to Arabic.
 
-## CMS Phase 2
+## CMS implementation
 
 Every editorial entity should distinguish:
 
@@ -100,7 +97,7 @@ Examples:
 
 A translation can be missing and should have an explicit status.
 
-Admin UX should eventually provide:
+Admin UX provides:
 - Arabic tab
 - English tab
 - translation completeness indicator

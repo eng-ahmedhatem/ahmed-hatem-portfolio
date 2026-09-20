@@ -5,7 +5,7 @@ import * as motion from "motion/react-m";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 
 import { Container } from "@/components/ui/container";
 import type {
@@ -216,6 +216,22 @@ export function SiteHeaderClient({
     setIsMenuOpen(false);
   }
 
+  function navigateItem(event: MouseEvent<HTMLAnchorElement>, href: string) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    closeMenuForNavigation();
+    const destination = new URL(href, window.location.origin);
+    if (destination.pathname !== pathname || !destination.hash) return;
+    const target = document.getElementById(decodeURIComponent(destination.hash.slice(1)));
+    if (!target) return;
+    event.preventDefault();
+    // Let the mobile panel release its scroll lock before moving to the section.
+    window.requestAnimationFrame(() => {
+      if (window.location.hash !== destination.hash) window.history.pushState(null, "", `${destination.pathname}${destination.hash}`);
+      target.scrollIntoView({ behavior: shouldReduceMotion ? "instant" : "smooth", block: "start" });
+      target.focus({ preventScroll: true });
+    });
+  }
+
   const ctaAriaCurrent = getAriaCurrent(pathname, primaryCta.href, locale);
 
   return (
@@ -234,12 +250,12 @@ export function SiteHeaderClient({
             {logoSrc && logoWidth && logoHeight ? (
               <Image
                 className={styles.brandLogo}
+                loading="eager"
                 src={logoSrc}
                 width={logoWidth}
                 height={logoHeight}
                 sizes="(max-width: 1023px) 192px, 180px"
                 alt={brandName}
-                loading="eager"
               />
             ) : (
               <span className={styles.brandSignal} aria-hidden="true"><i /><i /></span>
@@ -255,6 +271,7 @@ export function SiteHeaderClient({
                     <Link
                       className={styles.desktopNavLink}
                       href={item.href}
+                      onClick={(event) => navigateItem(event, item.href)}
                       aria-current={ariaCurrent}
                       data-active={Boolean(ariaCurrent)}
                     >
@@ -369,7 +386,7 @@ export function SiteHeaderClient({
                             aria-current={ariaCurrent}
                             data-active={Boolean(ariaCurrent)}
                             data-menu-initial-focus={index === 0 ? "true" : undefined}
-                            onClick={closeMenuForNavigation}
+                            onClick={(event) => navigateItem(event, item.href)}
                           >
                             <span className={styles.mobileNavLabel}>
                               {item.label}

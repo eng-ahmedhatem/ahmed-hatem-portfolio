@@ -13,6 +13,9 @@ const schema = z.object({
   ANALYTICS_SALT: z.string().min(16).optional(),
   ADMIN_EMAIL: z.string().email().optional(),
   ADMIN_PASSWORD: z.string().min(12).optional(),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  MAIL_FROM: z.string().email().optional(),
+  CONTACT_NOTIFICATION_EMAIL: z.string().email().optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
@@ -33,6 +36,9 @@ export const serverConfig = {
   analyticsSalt: parsed.data.ANALYTICS_SALT ?? parsed.data.SESSION_SECRET,
   adminEmail: parsed.data.ADMIN_EMAIL?.toLowerCase(),
   adminPassword: parsed.data.ADMIN_PASSWORD,
+  resendApiKey: parsed.data.RESEND_API_KEY,
+  mailFrom: parsed.data.MAIL_FROM,
+  notificationEmail: parsed.data.CONTACT_NOTIFICATION_EMAIL ?? parsed.data.ADMIN_EMAIL,
   production: parsed.data.NODE_ENV === "production",
 };
 
