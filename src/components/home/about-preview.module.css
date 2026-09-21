@@ -110,70 +110,29 @@
   isolation: isolate;
 }
 
-.stageNumber {
+.portraitFrame {
   position: absolute;
-  inset-block-start: 4%;
-  inset-inline-end: 2%;
-  z-index: -2;
-  color: transparent;
-  font-family: var(--font-en), sans-serif;
-  font-size: clamp(12rem, 23vw, 22rem);
-  font-weight: 700;
-  letter-spacing: -0.12em;
-  line-height: 0.75;
-  -webkit-text-stroke: 1px var(--border);
-  user-select: none;
-}
-
-.stageRail {
-  position: absolute;
-  inset-block: 9% 8%;
-  inset-inline-end: 12%;
+  inset: 10% 3% 4.8rem;
   z-index: -1;
-  inline-size: 1px;
-  background: var(--border);
+  border: 1px solid var(--border);
+  border-start-start-radius: 8rem;
+  border-start-end-radius: 1rem;
+  background: var(--surface);
 }
-
-.stageProgress {
-  position: absolute;
-  inset-block: 9% 8%;
-  inset-inline-end: calc(12% - 1px);
-  z-index: 0;
-  inline-size: 2px;
-  background: var(--accent);
-  box-shadow: 0 0 1rem color-mix(in srgb, var(--accent) 45%, transparent);
-  transform: scaleY(0);
-  transform-origin: top;
-}
-
-:global(html[dir="rtl"]) .stageProgress {
-  transform-origin: bottom;
-}
-
-.stageRail::before,
-.stageRail::after {
-  position: absolute;
-  inset-inline-start: -0.2rem;
-  inline-size: 0.42rem;
-  block-size: 0.42rem;
-  border-radius: 50%;
-  background: var(--accent);
+.portraitFrame::before {
   content: "";
-}
-
-.stageRail::before {
-  inset-block-start: 16%;
-}
-
-.stageRail::after {
-  inset-block-end: 16%;
-  background: var(--text-primary);
+  position: absolute;
+  inset-block-start: -1px;
+  inset-inline-end: 2rem;
+  inline-size: 3rem;
+  block-size: 2px;
+  background: var(--accent);
 }
 
 .portraitReveal {
   position: absolute;
-  inset-block: 0 -2rem;
-  inset-inline: 2% 9%;
+  inset-block: 0 4.8rem;
+  inset-inline: 5%;
   z-index: 1;
   overflow: visible;
   transform-origin: bottom center;
@@ -195,40 +154,39 @@
   block-size: 100%;
   object-fit: contain;
   object-position: center bottom;
-  filter:
-    drop-shadow(0 2.2rem 2.4rem rgb(0 27 61 / 0.17))
-    drop-shadow(1.1rem 0 0 color-mix(in srgb, var(--accent) 6%, transparent));
+  mask-image: linear-gradient(#000 92%, transparent);
 }
 
 .experience {
   position: absolute;
-  inset-block-end: 1.25rem;
-  inset-inline-start: 0;
+  inset-block-end: 0;
+  inset-inline: 3%;
   z-index: 2;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.75rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 1rem;
   align-items: center;
-  max-inline-size: 13rem;
-  padding: 0.95rem 1rem;
-  background: var(--ink-surface);
-  color: var(--on-primary);
-  box-shadow: 0 1.3rem 3rem -2rem rgb(var(--shadow-rgb) / 0.55);
+  padding: 1rem 1.2rem;
+  border-block-start: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
 }
 
 .experience strong {
-  color: #50b8ff;
-  font-size: 2.7rem;
+  color: var(--accent-strong);
+  font-family: var(--font-en), sans-serif;
+  font-size: 3rem;
   font-weight: 650;
   letter-spacing: -0.08em;
   line-height: 0.9;
 }
 
 .experience span {
-  color: rgb(255 255 255 / 0.72);
-  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-size: 1rem;
   line-height: 1.45;
 }
+.experienceMark { inline-size: 2.5rem; block-size: 2.5rem; stroke: var(--accent); stroke-width: 1.5; }
 
 @media (max-width: 64rem) {
   .layout {
@@ -272,10 +230,6 @@
     inset-inline: 8% 4%;
   }
 
-  .stageNumber {
-    inset-inline-end: 5%;
-    font-size: clamp(12rem, 46vw, 20rem);
-  }
 }
 
 @media (max-width: 30rem) {
@@ -310,7 +264,5 @@
     transform: none !important;
   }
 
-  .stageProgress {
-    transform: scaleY(1) !important;
-  }
+  .experienceMark path { stroke-dasharray: none !important; }
 }

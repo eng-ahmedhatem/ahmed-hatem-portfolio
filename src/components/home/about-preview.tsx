@@ -103,23 +103,15 @@ export function AboutPreview({ about }: AboutPreviewProps) {
         </motion.div>
 
         <div className={styles.portraitStage}>
-          <span className={styles.stageNumber} aria-hidden="true">
-            {about.experienceNumber.padStart(2, "0")}
-          </span>
-          <span className={styles.stageRail} aria-hidden="true" />
-          <motion.span
-            className={styles.stageProgress}
-            style={{ scaleY: reduce ? 1 : scrollYProgress }}
-            aria-hidden="true"
-          />
+          <div className={styles.portraitFrame} aria-hidden="true" />
           <motion.div
             className={styles.portraitReveal}
             initial={
               reduce
                 ? false
-                : { opacity: 0, clipPath: "inset(16% 0 0 0)", scale: 0.94 }
+                : { opacity: 0, y: 24, scale: 0.97 }
             }
-            whileInView={{ opacity: 1, clipPath: "inset(0% 0 0 0)", scale: 1 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{
               duration: reduce ? 0.01 : 0.9,
@@ -158,6 +150,9 @@ export function AboutPreview({ about }: AboutPreviewProps) {
           >
             <strong>{about.experienceNumber}</strong>
             <span>{about.experienceUnit}</span>
+            <svg className={styles.experienceMark} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+              <motion.path d="M9 29 L20 18 L28 26 L40 12 M28 12 H40 V24" style={{ pathLength: reduce ? 1 : scrollYProgress }} />
+            </svg>
           </motion.div>
         </div>
       </Container>
