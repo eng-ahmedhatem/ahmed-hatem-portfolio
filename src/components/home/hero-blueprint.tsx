@@ -69,7 +69,7 @@ export function HeroBlueprint({ locale, blueprint, profile, pointerX, pointerY, 
       }}>
       <motion.div className={styles.portraitDepth} style={{ x, y }}>
         <motion.div className={styles.portraitDepth} style={{ y: portraitY }}>
-          <Image className={styles.portrait} src={profile.src} width={profile.width} height={profile.height} alt={profile.alt} loading="eager" fetchPriority="high" sizes="(max-width: 480px) 85vw, (max-width: 895px) 460px, 38vw" />
+          <Image className={styles.portrait} src={profile.src} width={profile.width} height={profile.height} alt={profile.alt} loading="eager" fetchPriority="high" sizes="(max-width: 480px) 94vw, (max-width: 895px) 510px, 44vw" />
         </motion.div>
       </motion.div>
     </motion.div> : null}

@@ -1,5 +1,6 @@
-.hero { position: relative; overflow: clip; isolation: isolate; background: var(--background); border-block-end: 1px solid var(--border); }
-.layout { position: relative; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-template-rows: auto auto 1fr; column-gap: clamp(1rem, 2vw, 2rem); padding-block: clamp(3rem, 5vw, 5rem) 3.5rem; }
+.hero { --hero-header-size: 5.25rem; position: relative; overflow: clip; isolation: isolate; background: var(--background); border-block-end: 1px solid var(--border); }
+.layout { position: relative; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-template-rows: 1fr; column-gap: clamp(1rem, 2vw, 2rem); min-block-size: calc(100svh - var(--hero-header-size) - 2px); padding-block: clamp(2rem, 4svh, 3rem); }
+.copy { grid-column: 1 / 8; grid-row: 1; display: flex; flex-direction: column; justify-content: center; min-inline-size: 0; position: relative; z-index: 3; }
 .identityRail { grid-column: 1 / 8; grid-row: 1; display: flex; align-items: center; gap: 1rem; }
 .identity { display: grid; gap: 0.25rem; padding-inline-start: 1rem; border-inline-start: 2px solid var(--accent); }
 .identity strong { font-size: 1.6rem; font-weight: 700; line-height: 1.4; color: var(--text-primary); }
@@ -9,7 +10,10 @@
 .eyebrow { display: flex; align-items: center; gap: 0.65rem; font-size: 0.9rem; font-weight: 700; color: var(--accent-strong); line-height: 1.7; }
 .eyebrow i { inline-size: 1.7rem; block-size: 2px; flex: 0 0 auto; background: var(--accent); }
 .title { margin-block-start: 0.85rem; max-inline-size: 100%; font-size: clamp(2.1rem, 3.1vw, 2.9rem); font-weight: 700; letter-spacing: -0.045em; line-height: 1.2; text-wrap: balance; color: var(--text-primary); }
-.title > span { display: block; }
+.titleLine { display: block; }
+.writingLine { position: relative; display: inline-block; max-inline-size: 100%; vertical-align: top; }
+.writingText { display: block; }
+.writingCursor { position: absolute; inset-block: 0.15em 0.16em; inline-size: 2px; background: var(--accent); box-shadow: 0 0 9px color-mix(in srgb, var(--accent) 35%, transparent); pointer-events: none; }
 :global(html[lang="ar"]) .title { font-family: var(--font-ar-display), var(--font-ar-body), sans-serif; font-size: clamp(2.3rem, 3.6vw, 3.3rem); line-height: 1.35; letter-spacing: 0; font-weight: 650; }
 .supportingCopy { position: relative; z-index: 2; grid-column: 1 / 8; grid-row: 3; align-self: start; max-inline-size: 37rem; margin-block-start: 1.4rem; }
 .summary { font-size: 1.05rem; line-height: 1.9; color: var(--text-secondary); text-wrap: pretty; }
@@ -24,7 +28,7 @@
 .employment a { color: inherit; font-weight: 700; text-decoration: none; text-underline-offset: 0.3em; }
 .employment a:hover { text-decoration: underline; }
 .employment a:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
-.blueprint { position: relative; grid-column: 9 / -1; grid-row: 1 / 4; min-inline-size: 0; align-self: stretch; min-block-size: 32rem; isolation: isolate; }
+.blueprint { position: relative; grid-column: 8 / -1; grid-row: 1; min-inline-size: 0; align-self: center; block-size: clamp(32rem, calc(100svh - 11rem), 46rem); isolation: isolate; }
 .blueprint::before { content: ""; position: absolute; z-index: -1; inset: 26% 4% 2%; border-block-end: 1px solid var(--border); background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent) 5%, transparent)); }
 .markStage { position: absolute; inset: -7% -12% 0; pointer-events: none; z-index: 0; }
 .markPointer { inline-size: 100%; block-size: 100%; }
@@ -37,25 +41,29 @@
 .liveNode { fill: var(--accent); }
 .signalStage { position: absolute; inset: -7% -12% 0; z-index: 2; pointer-events: none; }
 .signalHalo { fill: color-mix(in srgb, var(--accent) 12%, transparent); }
-.portraitMask { position: absolute; inset: 0 -8% 0; z-index: 1; transform-origin: center bottom; }
+.portraitMask { position: absolute; inset: 0 -5% 0; z-index: 1; transform-origin: center bottom; }
 .portraitDepth { inline-size: 100%; block-size: 100%; transform-origin: center bottom; }
 .portrait { display: block; inline-size: 100%; block-size: 100%; object-fit: contain; object-position: center bottom; mask-image: linear-gradient(#000 91%, transparent); }
-.portraitCaption { position: absolute; z-index: 3; inset-block-end: 0.25rem; inset-inline: 0; display: flex; justify-content: center; }
+.portraitCaption { position: absolute; z-index: 3; inset-block-end: 1.5rem; inset-inline: 0; display: flex; justify-content: center; }
 .portraitCaption span { display: flex; align-items: center; gap: 0.65rem; background: var(--background); border-block-end: 1px solid var(--border); padding: 0.65rem 1rem; color: var(--text-secondary); font-size: 0.9rem; font-weight: 700; }
 .portraitCaption i { inline-size: 0.35rem; block-size: 0.35rem; background: var(--accent); border-radius: 50%; }
 @media (max-width: 64rem) {
-  .blueprint { grid-column: 8 / -1; min-block-size: 31rem; }
+  .blueprint { min-block-size: 31rem; }
   .identityRail, .titleBlock, .supportingCopy { grid-column: 1 / 8; }
   .title, :global(html[lang="ar"]) .title { font-size: clamp(2rem, 3.5vw, 2.6rem); }
   .titleBlock { margin-block-start: 2rem; }
 }
+@media (max-width: 63.99rem) {
+  .hero { --hero-header-size: 4.5rem; }
+}
 @media (max-width: 55.99rem) {
-  .layout { grid-template-columns: 1fr; grid-template-rows: repeat(4, auto); padding-block: 2.5rem 2.75rem; }
+  .layout { grid-template-columns: 1fr; grid-template-rows: auto auto; padding-block: 2.5rem 2.75rem; }
+  .copy { grid-column: 1; grid-row: 1; }
   .identityRail { grid-column: 1; grid-row: 1; }
   .titleBlock { grid-column: 1; grid-row: 2; margin-block-start: 1.9rem; }
   .supportingCopy { grid-column: 1; grid-row: 3; max-inline-size: 38rem; }
   .title, :global(html[lang="ar"]) .title { font-size: clamp(2rem, 5.1vw, 2.75rem); }
-  .blueprint { grid-column: 1; grid-row: 4; min-block-size: 0; inline-size: min(100%, 25rem); block-size: 29rem; justify-self: center; margin-block-start: 2.25rem; }
+  .blueprint { grid-column: 1; grid-row: 2; min-block-size: 0; inline-size: min(100%, 29rem); block-size: 33rem; justify-self: center; margin-block-start: 2.25rem; }
 }
 @media (max-width: 30rem) {
   .layout { padding-block-start: 2rem; }
@@ -66,9 +74,11 @@
   .actions { gap: 0.75rem; }
   .actions a { flex: 1 1 auto; min-block-size: 3rem; }
   .benefits { display: grid; gap: 0.45rem; }
-  .blueprint { inline-size: 86%; block-size: 23rem; margin-block-start: 1.5rem; }
+  .blueprint { inline-size: 94%; block-size: 27rem; margin-block-start: 1.5rem; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .writingText { clip-path: none !important; }
+  .writingCursor { display: none; }
   .titleBlock, .supportingCopy, .identityRail, .markStage, .markPointer, .portraitMask, .portraitDepth, .signalStage { transform: none !important; opacity: 1 !important; }
   .markA, .markH, .orbitPath { stroke-dasharray: none !important; stroke-dashoffset: 0 !important; }
 }

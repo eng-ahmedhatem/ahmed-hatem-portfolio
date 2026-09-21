@@ -93,14 +93,6 @@ export function Hero({ hero }: { hero: HeroViewModel }) {
       },
     },
   };
-  const lineGroupVariants = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: reduce ? 0 : 0.075,
-      },
-    },
-  };
   const supportingGroupVariants = {
     hidden: {},
     visible: {
@@ -142,6 +134,7 @@ export function Hero({ hero }: { hero: HeroViewModel }) {
       onPointerLeave={resetPointerDepth}
     >
       <Container className={styles.layout}>
+        <div className={styles.copy}>
         <motion.div
           className={styles.identityRail}
           style={{ y: railY, opacity: railOpacity }}
@@ -168,13 +161,25 @@ export function Hero({ hero }: { hero: HeroViewModel }) {
             {hero.eyebrow}
           </motion.p>
 
-          <motion.h1 id="hero-title" className={styles.title} variants={lineGroupVariants}>
-            {titleLines.map((line) => (
-              <motion.span key={line} variants={itemVariants}>
-                {line}{" "}
-              </motion.span>
+          <h1 id="hero-title" className={styles.title}>
+            {titleLines.map((line, index) => (
+              <span key={line} className={styles.titleLine}>
+                <span className={styles.writingLine}>
+                  {/* Keep Arabic shaping and the complete server-rendered heading intact. */}
+                  <motion.span className={styles.writingText}
+                    initial={reduce ? false : { clipPath: hero.locale === "ar" ? "inset(-12% 0 -12% 100%)" : "inset(-12% 100% -12% 0)" }}
+                    animate={{ clipPath: "inset(-12% 0% -12% 0%)" }}
+                    transition={{ duration: reduce ? 0 : 0.85, delay: reduce ? 0 : 0.25 + index * 0.65, ease: [0.4, 0, 0.2, 1] }}>
+                    {line}{" "}
+                  </motion.span>
+                  {!reduce ? <motion.span className={styles.writingCursor} aria-hidden="true"
+                    initial={{ insetInlineStart: "0%", opacity: 0 }}
+                    animate={{ insetInlineStart: ["0%", "100%"], opacity: [0, 1, 1, 0] }}
+                    transition={{ duration: 0.85, delay: 0.25 + index * 0.65, insetInlineStart: { ease: [0.4, 0, 0.2, 1] }, opacity: { times: [0, 0.08, 0.85, 1] } }} /> : null}
+                </span>
+              </span>
             ))}
-          </motion.h1>
+          </h1>
         </motion.div>
 
         <motion.div
@@ -204,6 +209,7 @@ export function Hero({ hero }: { hero: HeroViewModel }) {
             <p><span>{hero.employment.role}</span><a href={hero.employment.url} target="_blank" rel="noopener noreferrer">{hero.employment.company}<span aria-hidden="true"> ↗</span></a></p>
           </motion.div> : null}
         </motion.div>
+        </div>
 
         <HeroBlueprint
           locale={hero.locale}
