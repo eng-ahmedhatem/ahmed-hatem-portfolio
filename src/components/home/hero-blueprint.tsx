@@ -1,48 +1,87 @@
 "use client";
 
-import { useTransform, type MotionValue } from "motion/react";
+import { useScroll, useTransform, type MotionValue } from "motion/react";
 import * as motion from "motion/react-m";
 import Image from "next/image";
+import { useRef } from "react";
 import type { HeroBlueprintTranslation, Locale } from "@/domain/content/types";
 import styles from "./hero.module.css";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-export function HeroBlueprint({ locale, blueprint, profile, pointerX, pointerY, progress, reducedMotion }: {
+export function HeroBlueprint({ locale, blueprint, profile, pointerX, pointerY, reducedMotion }: {
   locale: Locale;
   blueprint: HeroBlueprintTranslation;
   profile?: { src: string; width: number; height: number; alt: string };
   pointerX: MotionValue<number>;
   pointerY: MotionValue<number>;
-  progress: MotionValue<number>;
   reducedMotion: boolean;
 }) {
+  const artworkRef = useRef<HTMLDivElement>(null);
+  // The portrait enters much later on mobile; its motion follows its own viewport.
+  const { scrollYProgress: progress } = useScroll({
+    target: artworkRef,
+    offset: ["start end", "end start"],
+  });
   const direction = locale === "ar" ? -1 : 1;
-  const portraitY = useTransform(progress, [0, 1], reducedMotion ? [0, 0] : [0, -22]);
-  const artworkY = useTransform(progress, [0, 1], reducedMotion ? [0, 0] : [0, 26]);
-  const orbitLength = useTransform(progress, [0, 0.7], [0.55, 1]);
-  const x = useTransform(pointerX, [-1, 1], reducedMotion ? [0, 0] : [4, -4]);
-  const y = useTransform(pointerY, [-1, 1], reducedMotion ? [0, 0] : [3, -3]);
+  const portraitY = useTransform(progress, [0, 1], reducedMotion ? [0, 0] : [16, -24]);
+  const artworkY = useTransform(progress, [0, 1], reducedMotion ? [0, 0] : [-12, 20]);
+  const artworkRotate = useTransform(progress, [0, 1], reducedMotion ? [0, 0] : [-1.2 * direction, 1.2 * direction]);
+  const orbitLength = useTransform(progress, [0, 0.85], [0.18, 1]);
+  const x = useTransform(pointerX, [-1, 1], reducedMotion ? [0, 0] : [6, -6]);
+  const y = useTransform(pointerY, [-1, 1], reducedMotion ? [0, 0] : [4, -4]);
+  const markX = useTransform(pointerX, [-1, 1], reducedMotion ? [0, 0] : [-5, 5]);
+  const markY = useTransform(pointerY, [-1, 1], reducedMotion ? [0, 0] : [-3, 3]);
+  // The signal follows the same quadratic curve as the foreground connection.
+  const signalX = useTransform(progress, (value) => {
+    const t = reducedMotion ? 0.85 : Math.min(1, value / 0.85);
+    return (1 - t) ** 2 * 34 + 2 * (1 - t) * t * 290 + t ** 2 * 558;
+  });
+  const signalY = useTransform(progress, (value) => {
+    const t = reducedMotion ? 0.85 : Math.min(1, value / 0.85);
+    return (1 - t) ** 2 * 458 + 2 * (1 - t) * t * 660 + t ** 2 * 365;
+  });
+  const draw = {
+    hidden: { pathLength: reducedMotion ? 1 : 0 },
+    visible: { pathLength: 1, transition: { duration: reducedMotion ? 0 : 0.85, ease: EASE } },
+  };
 
-  return <div className={styles.blueprint} data-hero-portrait>
-    <motion.div className={styles.markStage} style={{ y: artworkY }} aria-hidden="true">
-      <svg className={styles.brandCanvas} viewBox="0 0 450 560" focusable="false">
-        <path className={styles.echoPath} d="M28 437 C-48 213 158 -38 352 66 C470 130 475 358 374 493" />
-        <motion.path className={styles.orbitPath} d="M-8 404 C16 531 400 531 444 328 C462 239 409 153 367 119" style={{ pathLength: reducedMotion ? 1 : orbitLength }} />
-        <circle className={styles.liveNode} cx="367" cy="119" r="4" />
-        <path className={styles.orbitPath} d="M37 136 H59 M48 125 V147" />
-      </svg>
+  return <motion.div ref={artworkRef} className={styles.blueprint} data-hero-portrait
+    initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.18 }}>
+    <motion.div className={styles.markStage} style={{ y: artworkY, rotate: artworkRotate }} aria-hidden="true">
+      <motion.div className={styles.markPointer} style={{ x: markX, y: markY }}>
+        <svg className={styles.brandCanvas} viewBox="0 0 600 640" focusable="false">
+          <path className={styles.echoPath} d="M18 533 L194 90 L388 533 M355 108 V540 M570 108 V540" />
+          <motion.path className={styles.markA} d="M40 520 L195 126 L365 520 M109 351 H292" variants={draw} />
+          <motion.path className={styles.markH} d="M355 148 V520 M355 330 H550 M550 148 V520" variants={draw} />
+          <path className={styles.echoPath} d="M28 399 C-26 209 146 31 366 70 C530 99 611 283 560 455" />
+          <motion.path className={styles.orbitPath} d="M28 399 C-26 209 146 31 366 70 C530 99 611 283 560 455" style={{ pathLength: reducedMotion ? 1 : orbitLength }} />
+          <path className={styles.signalSlash} d="M390 330 H467" />
+          <circle className={styles.liveNode} cx="366" cy="70" r="4" />
+          <path className={styles.orbitPath} d="M30 180 H48 M39 171 V189" />
+        </svg>
+      </motion.div>
     </motion.div>
     {profile ? <motion.div className={styles.portraitMask}
-      initial={reducedMotion ? false : { opacity: 0, x: direction * 14, y: 20 }}
-      animate={{ opacity: 1, x: 0, y: 0 }}
-      transition={{ duration: reducedMotion ? 0 : 0.7, delay: reducedMotion ? 0 : 0.18, ease: EASE }}>
+      variants={{
+        hidden: reducedMotion ? { opacity: 1 } : { opacity: 0, x: direction * 16, y: 24, scale: 0.97 },
+        visible: { opacity: 1, x: 0, y: 0, scale: 1, transition: { duration: reducedMotion ? 0 : 0.75, delay: reducedMotion ? 0 : 0.16, ease: EASE } },
+      }}>
       <motion.div className={styles.portraitDepth} style={{ x, y }}>
         <motion.div className={styles.portraitDepth} style={{ y: portraitY }}>
           <Image className={styles.portrait} src={profile.src} width={profile.width} height={profile.height} alt={profile.alt} loading="eager" fetchPriority="high" sizes="(max-width: 480px) 85vw, (max-width: 895px) 460px, 38vw" />
         </motion.div>
       </motion.div>
     </motion.div> : null}
-    <div className={styles.portraitCaption}><span>{blueprint.liveLabel}</span></div>
-  </div>;
+    <motion.div className={styles.signalStage} aria-hidden="true"
+      variants={{ hidden: { opacity: reducedMotion ? 1 : 0 }, visible: { opacity: 1, transition: { duration: reducedMotion ? 0 : 0.5, delay: reducedMotion ? 0 : 0.4 } } }}>
+      <svg className={styles.brandCanvas} viewBox="0 0 600 640" focusable="false">
+        <path className={styles.echoPath} d="M34 458 Q290 660 558 365" />
+        <motion.path className={styles.orbitPath} d="M34 458 Q290 660 558 365" style={{ pathLength: reducedMotion ? 1 : orbitLength }} />
+        <motion.circle className={styles.signalHalo} style={{ cx: signalX, cy: signalY }} r="10" />
+        <motion.circle className={styles.liveNode} style={{ cx: signalX, cy: signalY }} r="3.5" />
+      </svg>
+    </motion.div>
+    <div className={styles.portraitCaption}><span><i aria-hidden="true" />{blueprint.liveLabel}</span></div>
+  </motion.div>;
 }

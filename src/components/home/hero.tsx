@@ -211,7 +211,6 @@ export function Hero({ hero }: { hero: HeroViewModel }) {
           profile={hero.profile}
           pointerX={pointerSpringX}
           pointerY={pointerSpringY}
-          progress={scrollYProgress}
           reducedMotion={reduce}
         />
       </Container>
