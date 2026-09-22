@@ -43,11 +43,17 @@
 .liveNode { fill: var(--accent); }
 .signalStage { position: absolute; inset: -7% -12% 0; z-index: 2; pointer-events: none; }
 .signalHalo { fill: color-mix(in srgb, var(--accent) 12%, transparent); }
-.floatingDetails { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-.floatingSymbol { position: absolute; inline-size: 3.5rem; aspect-ratio: 1; color: var(--accent-strong); opacity: 0.65; }
-.floatingSymbol svg { inline-size: 100%; block-size: 100%; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
-.orbitFragment { inset-block-start: 25%; inset-inline-start: 2%; }
-.brandFragment { inset-block-end: 23%; inset-inline-end: 2%; inline-size: 2.8rem; }
+.heroAmbient { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.ambientSymbol { position: absolute; inline-size: clamp(2rem, 3.4vw, 3.4rem); aspect-ratio: 1; color: var(--accent-strong); opacity: .38; }
+.ambientSymbol svg { inline-size: 100%; block-size: 100%; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+.ambientSymbol:nth-child(1) { inset-block-start: 8%; inset-inline-start: 8%; }
+.ambientSymbol:nth-child(2) { inset-block-start: 5%; inset-inline-start: 49%; inline-size: 2.5rem; }
+.ambientSymbol:nth-child(3) { inset-block-start: 44%; inset-inline-start: 1%; }
+.ambientSymbol:nth-child(4) { inset-block-start: 17%; inset-inline-end: 3%; }
+.ambientSymbol:nth-child(5) { inset-block-end: 5%; inset-inline-start: 18%; inline-size: 2.5rem; }
+.ambientSymbol:nth-child(6) { inset-block-end: 16%; inset-inline-start: 54%; }
+.ambientSymbol:nth-child(7) { inset-block-end: 6%; inset-inline-end: 5%; }
+.ambientSymbol:nth-child(8) { inset-block-start: 58%; inset-inline-end: 1%; inline-size: 2rem; }
 .detailEcho { opacity: 0.3; }
 .detailNode { fill: currentColor; stroke: none; }
 .portraitMask { position: absolute; inset: 0 -5% 0; z-index: 1; transform-origin: center bottom; }
@@ -84,14 +90,16 @@
   .actions a { flex: 1 1 auto; min-block-size: 3rem; }
   .benefits { display: grid; gap: 0.45rem; }
   .blueprint { inline-size: 94%; block-size: clamp(20rem, 92vw, 26rem); margin-block-start: 0; }
-  .floatingSymbol { inline-size: 2.8rem; }
-  .brandFragment { inline-size: 2.3rem; }
+  .ambientSymbol { inline-size: 2rem; opacity: .28; }
+  .ambientSymbol:nth-child(2), .ambientSymbol:nth-child(5), .ambientSymbol:nth-child(8) { display: none; }
+  .ambientSymbol:nth-child(3) { inset-block-start: 37%; }
+  .ambientSymbol:nth-child(6) { inset-block-end: 29%; inset-inline-start: 4%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .writingText { color: var(--text-primary); }
   .typedOverlay { display: none; }
   .writingCursor { display: none; }
-  .floatingDetails, .floatingSymbol { transform: none !important; }
+  .ambientSymbol { transform: none !important; }
   .titleBlock, .supportingCopy, .identityRail, .markStage, .markPointer, .portraitMask, .portraitDepth, .signalStage { transform: none !important; opacity: 1 !important; }
   .markA, .markH, .orbitPath { stroke-dasharray: none !important; stroke-dashoffset: 0 !important; }
 }

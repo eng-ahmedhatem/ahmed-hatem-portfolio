@@ -15,6 +15,7 @@ import { Container } from "@/components/ui/container";
 import type { HeroViewModel } from "@/features/site/view-models";
 
 import { HeroBlueprint } from "./hero-blueprint";
+import { HeroAmbient } from "./hero-ambient";
 import { HeroTypedLine } from "./hero-typed-line";
 import styles from "./hero.module.css";
 
@@ -135,6 +136,7 @@ export function Hero({ hero }: { hero: HeroViewModel }) {
       onPointerMove={handlePointerMove}
       onPointerLeave={resetPointerDepth}
     >
+      <HeroAmbient reducedMotion={reduce} />
       <Container className={styles.layout}>
         <HeroBlueprint
           locale={hero.locale}

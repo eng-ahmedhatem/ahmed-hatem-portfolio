@@ -1,63 +1,13 @@
 "use client";
 
-import { animate, useMotionValue, useInView, useScroll, useTransform, type MotionValue } from "motion/react";
+import { useScroll, useTransform, type MotionValue } from "motion/react";
 import * as motion from "motion/react-m";
 import Image from "next/image";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useRef } from "react";
 import type { HeroBlueprintTranslation, Locale } from "@/domain/content/types";
-import { startAmbientLoop } from "@/components/motion/ambient-loop";
 import styles from "./hero.module.css";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-
-function DriftingDetail({ className, reducedMotion, children }: {
-  className: string;
-  reducedMotion: boolean;
-  children: ReactNode;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const visible = useInView(ref, { amount: 0.2 });
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const rotate = useMotionValue(0);
-
-  useEffect(() => {
-    if (reducedMotion || !visible) {
-      x.set(0);
-      y.set(0);
-      rotate.set(0);
-      return;
-    }
-    let stopLoop: (() => void) | undefined;
-    function syncVisibility() {
-      stopLoop?.();
-      x.stop();
-      y.stop();
-      rotate.stop();
-      if (document.hidden) return;
-      // MotionValues don't depend on LazyMotion's asynchronous feature subscription.
-      stopLoop = startAmbientLoop(() => {
-        const duration = 3.2 + Math.random() * 2;
-        const transition = { duration, ease: "easeInOut" as const };
-        animate(x, (Math.random() - 0.5) * 24, transition);
-        animate(y, (Math.random() - 0.5) * 30, transition);
-        animate(rotate, (Math.random() - 0.5) * 16, transition);
-        return duration * 1000 + 100;
-      });
-    }
-    syncVisibility();
-    document.addEventListener("visibilitychange", syncVisibility);
-    return () => {
-      stopLoop?.();
-      x.stop();
-      y.stop();
-      rotate.stop();
-      document.removeEventListener("visibilitychange", syncVisibility);
-    };
-  }, [x, y, rotate, reducedMotion, visible]);
-
-  return <motion.div ref={ref} className={className} style={{ x, y, rotate }}>{children}</motion.div>;
-}
 
 export function HeroBlueprint({ locale, blueprint, profile, pointerX, pointerY, reducedMotion }: {
   locale: Locale;
@@ -131,14 +81,6 @@ export function HeroBlueprint({ locale, blueprint, profile, pointerX, pointerY, 
         <motion.circle className={styles.signalHalo} style={{ cx: signalX, cy: signalY }} r="10" />
         <motion.circle className={styles.liveNode} style={{ cx: signalX, cy: signalY }} r="3.5" />
       </svg>
-    </motion.div>
-    <motion.div className={styles.floatingDetails} style={{ y: artworkY }} aria-hidden="true">
-      <DriftingDetail className={`${styles.floatingSymbol} ${styles.orbitFragment}`} reducedMotion={reducedMotion}>
-        <svg viewBox="0 0 64 64" fill="none" focusable="false"><path d="M14 47a23 23 0 1 1 37-27" /><path className={styles.detailEcho} d="M22 44a16 16 0 0 0 25-19" /><circle cx="51" cy="20" r="3" className={styles.detailNode} /></svg>
-      </DriftingDetail>
-      <DriftingDetail className={`${styles.floatingSymbol} ${styles.brandFragment}`} reducedMotion={reducedMotion}>
-        <svg viewBox="0 0 56 64" fill="none" focusable="false"><path d="m12 48 16-34 16 34M20 34h16" /><path className={styles.detailEcho} d="M8 55h40" /><circle cx="44" cy="48" r="2.5" className={styles.detailNode} /></svg>
-      </DriftingDetail>
     </motion.div>
     <div className={styles.portraitCaption}><span><i aria-hidden="true" />{blueprint.liveLabel}</span></div>
   </motion.div>;
