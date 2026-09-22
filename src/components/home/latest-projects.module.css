@@ -30,13 +30,13 @@
 }
 
 .header h2 {
-  max-inline-size: 17ch;
+  max-inline-size: 23ch;
   margin-block-start: 0.75rem;
   color: var(--secondary-dark);
-  font-size: clamp(2.45rem, 3.5vw, 3.55rem);
+  font-size: clamp(1.9rem, 3vw, 2.8rem);
   font-weight: 660;
   letter-spacing: -0.055em;
-  line-height: 1.02;
+  line-height: 1.35;
   text-wrap: balance;
 }
 
@@ -48,7 +48,8 @@
 }
 
 :global(html[lang="ar"]) .header h2 {
-  line-height: 1.16;
+  max-inline-size: 100%;
+  line-height: 1.55;
 }
 
 .headerAside {
@@ -358,8 +359,8 @@
   }
 
   .header h2 {
-    max-inline-size: 18ch;
-    font-size: clamp(2.35rem, 6.5vw, 3.3rem);
+    max-inline-size: 23ch;
+    font-size: clamp(1.9rem, 4.5vw, 2.5rem);
   }
 
   .projects {
@@ -424,7 +425,7 @@
   }
 
   .header h2 {
-    font-size: clamp(2.15rem, 9vw, 2.8rem);
+    font-size: clamp(1.75rem, 7vw, 2.1rem);
   }
 
   .projectsStage {

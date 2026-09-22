@@ -18,7 +18,7 @@ export function HeroBlueprint({ locale, blueprint, profile, pointerX, pointerY, 
   reducedMotion: boolean;
 }) {
   const artworkRef = useRef<HTMLDivElement>(null);
-  // The portrait enters much later on mobile; its motion follows its own viewport.
+  // Track the artwork independently of the copy in either responsive order.
   const { scrollYProgress: progress } = useScroll({
     target: artworkRef,
     offset: ["start end", "end start"],
@@ -81,6 +81,22 @@ export function HeroBlueprint({ locale, blueprint, profile, pointerX, pointerY, 
         <motion.circle className={styles.signalHalo} style={{ cx: signalX, cy: signalY }} r="10" />
         <motion.circle className={styles.liveNode} style={{ cx: signalX, cy: signalY }} r="3.5" />
       </svg>
+    </motion.div>
+    <motion.div className={styles.floatingDetails} style={{ y: artworkY }} aria-hidden="true">
+      <motion.div className={`${styles.floatingSymbol} ${styles.codeSymbol}`}
+        initial={false}
+        whileInView={reducedMotion ? { y: 0, rotate: 0 } : { y: [0, -7, 0], rotate: [-4, 0, -4] }}
+        viewport={{ once: true, amount: 0.5 }}
+        transition={{ duration: reducedMotion ? 0 : 4.4, ease: "easeInOut" }}>
+        <svg viewBox="0 0 40 40" fill="none" focusable="false"><path d="m14 13-7 7 7 7m12-14 7 7-7 7M23 9l-6 22" /></svg>
+      </motion.div>
+      <motion.div className={`${styles.floatingSymbol} ${styles.connectionSymbol}`}
+        initial={false}
+        whileInView={reducedMotion ? { y: 0, rotate: 0 } : { y: [0, 6, 0], rotate: [5, 1, 5] }}
+        viewport={{ once: true, amount: 0.5 }}
+        transition={{ duration: reducedMotion ? 0 : 4, delay: reducedMotion ? 0 : 0.4, ease: "easeInOut" }}>
+        <svg viewBox="0 0 40 40" fill="none" focusable="false"><rect x="7" y="7" width="10" height="10" rx="3" /><rect x="23" y="23" width="10" height="10" rx="3" /><path d="M12 17v7a4 4 0 0 0 4 4h7M28 23V12H17" /></svg>
+      </motion.div>
     </motion.div>
     <div className={styles.portraitCaption}><span><i aria-hidden="true" />{blueprint.liveLabel}</span></div>
   </motion.div>;

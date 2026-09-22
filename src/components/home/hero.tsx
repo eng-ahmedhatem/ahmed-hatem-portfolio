@@ -22,6 +22,7 @@ const PREMIUM_EASE = [0.22, 1, 0.36, 1] as const;
 
 export function Hero({ hero }: { hero: HeroViewModel }) {
   const sectionRef = useRef<HTMLElement>(null);
+  const copyRef = useRef<HTMLDivElement>(null);
   const reduce = Boolean(useReducedMotion());
   const pointerX = useMotionValue(0);
   const pointerY = useMotionValue(0);
@@ -37,7 +38,7 @@ export function Hero({ hero }: { hero: HeroViewModel }) {
   });
   const fromStart = hero.locale === "ar" ? 18 : -18;
   const { scrollYProgress } = useScroll({
-    target: sectionRef,
+    target: copyRef,
     offset: ["start start", "end start"],
   });
   const titleY = useTransform(
@@ -135,7 +136,15 @@ export function Hero({ hero }: { hero: HeroViewModel }) {
       onPointerLeave={resetPointerDepth}
     >
       <Container className={styles.layout}>
-        <div className={styles.copy}>
+        <HeroBlueprint
+          locale={hero.locale}
+          blueprint={hero.blueprint}
+          profile={hero.profile}
+          pointerX={pointerSpringX}
+          pointerY={pointerSpringY}
+          reducedMotion={reduce}
+        />
+        <div ref={copyRef} className={styles.copy}>
         <motion.div
           className={styles.identityRail}
           style={{ y: railY, opacity: railOpacity }}
@@ -198,14 +207,6 @@ export function Hero({ hero }: { hero: HeroViewModel }) {
         </motion.div>
         </div>
 
-        <HeroBlueprint
-          locale={hero.locale}
-          blueprint={hero.blueprint}
-          profile={hero.profile}
-          pointerX={pointerSpringX}
-          pointerY={pointerSpringY}
-          reducedMotion={reduce}
-        />
       </Container>
     </section>
   );
