@@ -44,10 +44,12 @@
 .signalStage { position: absolute; inset: -7% -12% 0; z-index: 2; pointer-events: none; }
 .signalHalo { fill: color-mix(in srgb, var(--accent) 12%, transparent); }
 .floatingDetails { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-.floatingSymbol { position: absolute; display: grid; place-items: center; inline-size: 3.25rem; aspect-ratio: 1; border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border)); border-radius: 0.8rem; background: var(--surface); color: var(--accent-strong); }
-.floatingSymbol svg { inline-size: 70%; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
-.codeSymbol { inset-block-start: 24%; inset-inline-start: 0; }
-.connectionSymbol { inset-block-end: 25%; inset-inline-end: -1%; inline-size: 2.75rem; }
+.floatingSymbol { position: absolute; inline-size: 3.5rem; aspect-ratio: 1; color: var(--accent-strong); opacity: 0.65; }
+.floatingSymbol svg { inline-size: 100%; block-size: 100%; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+.orbitFragment { inset-block-start: 25%; inset-inline-start: 2%; }
+.brandFragment { inset-block-end: 23%; inset-inline-end: 2%; inline-size: 2.8rem; }
+.detailEcho { opacity: 0.3; }
+.detailNode { fill: currentColor; stroke: none; }
 .portraitMask { position: absolute; inset: 0 -5% 0; z-index: 1; transform-origin: center bottom; }
 .portraitDepth { inline-size: 100%; block-size: 100%; transform-origin: center bottom; }
 .portrait { display: block; inline-size: 100%; block-size: 100%; object-fit: contain; object-position: center bottom; mask-image: linear-gradient(#000 91%, transparent); }
@@ -82,8 +84,8 @@
   .actions a { flex: 1 1 auto; min-block-size: 3rem; }
   .benefits { display: grid; gap: 0.45rem; }
   .blueprint { inline-size: 94%; block-size: clamp(20rem, 92vw, 26rem); margin-block-start: 0; }
-  .floatingSymbol { inline-size: 2.65rem; }
-  .connectionSymbol { inline-size: 2.35rem; }
+  .floatingSymbol { inline-size: 2.8rem; }
+  .brandFragment { inline-size: 2.3rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .writingText { color: var(--text-primary); }

@@ -1,13 +1,56 @@
 "use client";
 
-import { useScroll, useTransform, type MotionValue } from "motion/react";
+import { useAnimationControls, useInView, useScroll, useTransform, type MotionValue } from "motion/react";
 import * as motion from "motion/react-m";
 import Image from "next/image";
-import { useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import type { HeroBlueprintTranslation, Locale } from "@/domain/content/types";
 import styles from "./hero.module.css";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
+
+function DriftingDetail({ className, reducedMotion, children }: {
+  className: string;
+  reducedMotion: boolean;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const visible = useInView(ref, { amount: 0.2 });
+  const controls = useAnimationControls();
+
+  useEffect(() => {
+    if (reducedMotion || !visible) {
+      controls.set({ x: 0, y: 0, rotate: 0 });
+      return;
+    }
+    let generation = 0;
+    // Randomness is client-only and bounded to safe space beside the portrait.
+    async function drift(run: number) {
+      while (run === generation && !document.hidden) {
+        await controls.start({
+          x: (Math.random() - 0.5) * 24,
+          y: (Math.random() - 0.5) * 30,
+          rotate: (Math.random() - 0.5) * 16,
+          transition: { duration: 3.2 + Math.random() * 2, ease: "easeInOut" },
+        });
+      }
+    }
+    function syncVisibility() {
+      generation += 1;
+      controls.stop();
+      if (!document.hidden) void drift(generation);
+    }
+    syncVisibility();
+    document.addEventListener("visibilitychange", syncVisibility);
+    return () => {
+      generation += 1;
+      controls.stop();
+      document.removeEventListener("visibilitychange", syncVisibility);
+    };
+  }, [controls, reducedMotion, visible]);
+
+  return <motion.div ref={ref} className={className} animate={controls}>{children}</motion.div>;
+}
 
 export function HeroBlueprint({ locale, blueprint, profile, pointerX, pointerY, reducedMotion }: {
   locale: Locale;
@@ -83,20 +126,12 @@ export function HeroBlueprint({ locale, blueprint, profile, pointerX, pointerY, 
       </svg>
     </motion.div>
     <motion.div className={styles.floatingDetails} style={{ y: artworkY }} aria-hidden="true">
-      <motion.div className={`${styles.floatingSymbol} ${styles.codeSymbol}`}
-        initial={false}
-        whileInView={reducedMotion ? { y: 0, rotate: 0 } : { y: [0, -7, 0], rotate: [-4, 0, -4] }}
-        viewport={{ once: true, amount: 0.5 }}
-        transition={{ duration: reducedMotion ? 0 : 4.4, ease: "easeInOut" }}>
-        <svg viewBox="0 0 40 40" fill="none" focusable="false"><path d="m14 13-7 7 7 7m12-14 7 7-7 7M23 9l-6 22" /></svg>
-      </motion.div>
-      <motion.div className={`${styles.floatingSymbol} ${styles.connectionSymbol}`}
-        initial={false}
-        whileInView={reducedMotion ? { y: 0, rotate: 0 } : { y: [0, 6, 0], rotate: [5, 1, 5] }}
-        viewport={{ once: true, amount: 0.5 }}
-        transition={{ duration: reducedMotion ? 0 : 4, delay: reducedMotion ? 0 : 0.4, ease: "easeInOut" }}>
-        <svg viewBox="0 0 40 40" fill="none" focusable="false"><rect x="7" y="7" width="10" height="10" rx="3" /><rect x="23" y="23" width="10" height="10" rx="3" /><path d="M12 17v7a4 4 0 0 0 4 4h7M28 23V12H17" /></svg>
-      </motion.div>
+      <DriftingDetail className={`${styles.floatingSymbol} ${styles.orbitFragment}`} reducedMotion={reducedMotion}>
+        <svg viewBox="0 0 64 64" fill="none" focusable="false"><path d="M14 47a23 23 0 1 1 37-27" /><path className={styles.detailEcho} d="M22 44a16 16 0 0 0 25-19" /><circle cx="51" cy="20" r="3" className={styles.detailNode} /></svg>
+      </DriftingDetail>
+      <DriftingDetail className={`${styles.floatingSymbol} ${styles.brandFragment}`} reducedMotion={reducedMotion}>
+        <svg viewBox="0 0 56 64" fill="none" focusable="false"><path d="m12 48 16-34 16 34M20 34h16" /><path className={styles.detailEcho} d="M8 55h40" /><circle cx="44" cy="48" r="2.5" className={styles.detailNode} /></svg>
+      </DriftingDetail>
     </motion.div>
     <div className={styles.portraitCaption}><span><i aria-hidden="true" />{blueprint.liveLabel}</span></div>
   </motion.div>;
