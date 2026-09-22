@@ -1,10 +1,11 @@
 "use client";
 
-import { useAnimationControls, useInView, useScroll, useTransform, type MotionValue } from "motion/react";
+import { animate, useMotionValue, useInView, useScroll, useTransform, type MotionValue } from "motion/react";
 import * as motion from "motion/react-m";
 import Image from "next/image";
 import { useEffect, useRef, type ReactNode } from "react";
 import type { HeroBlueprintTranslation, Locale } from "@/domain/content/types";
+import { startAmbientLoop } from "@/components/motion/ambient-loop";
 import styles from "./hero.module.css";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -16,40 +17,46 @@ function DriftingDetail({ className, reducedMotion, children }: {
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const visible = useInView(ref, { amount: 0.2 });
-  const controls = useAnimationControls();
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const rotate = useMotionValue(0);
 
   useEffect(() => {
     if (reducedMotion || !visible) {
-      controls.set({ x: 0, y: 0, rotate: 0 });
+      x.set(0);
+      y.set(0);
+      rotate.set(0);
       return;
     }
-    let generation = 0;
-    // Randomness is client-only and bounded to safe space beside the portrait.
-    async function drift(run: number) {
-      while (run === generation && !document.hidden) {
-        await controls.start({
-          x: (Math.random() - 0.5) * 24,
-          y: (Math.random() - 0.5) * 30,
-          rotate: (Math.random() - 0.5) * 16,
-          transition: { duration: 3.2 + Math.random() * 2, ease: "easeInOut" },
-        });
-      }
-    }
+    let stopLoop: (() => void) | undefined;
     function syncVisibility() {
-      generation += 1;
-      controls.stop();
-      if (!document.hidden) void drift(generation);
+      stopLoop?.();
+      x.stop();
+      y.stop();
+      rotate.stop();
+      if (document.hidden) return;
+      // MotionValues don't depend on LazyMotion's asynchronous feature subscription.
+      stopLoop = startAmbientLoop(() => {
+        const duration = 3.2 + Math.random() * 2;
+        const transition = { duration, ease: "easeInOut" as const };
+        animate(x, (Math.random() - 0.5) * 24, transition);
+        animate(y, (Math.random() - 0.5) * 30, transition);
+        animate(rotate, (Math.random() - 0.5) * 16, transition);
+        return duration * 1000 + 100;
+      });
     }
     syncVisibility();
     document.addEventListener("visibilitychange", syncVisibility);
     return () => {
-      generation += 1;
-      controls.stop();
+      stopLoop?.();
+      x.stop();
+      y.stop();
+      rotate.stop();
       document.removeEventListener("visibilitychange", syncVisibility);
     };
-  }, [controls, reducedMotion, visible]);
+  }, [x, y, rotate, reducedMotion, visible]);
 
-  return <motion.div ref={ref} className={className} animate={controls}>{children}</motion.div>;
+  return <motion.div ref={ref} className={className} style={{ x, y, rotate }}>{children}</motion.div>;
 }
 
 export function HeroBlueprint({ locale, blueprint, profile, pointerX, pointerY, reducedMotion }: {

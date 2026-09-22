@@ -514,6 +514,8 @@ http://localhost:3000/api/cms/health
 
 ## 21. قواعد التغيير الآمن
 
+إصلاح تشغيل (2026-09-22): حركة العناصر العائمة تستخدم MotionValues مباشرة ومؤقّتًا قابلًا للإلغاء في `ambient-loop.ts`، وليس حلقة `while/await controls.start()`؛ الأخيرة قد تتكرر فورًا قبل اشتراك ميزات LazyMotion فتحتكر microtask queue وتعلّق ظهور المحتوى. الحركة تتوقف عند إخفاء التبويب أو خروج العنصر أو reduced motion. أضيف اختباران لمنع التكرار الفوري والتحقق من إلغاء المؤقّت. نجحت الاختبارات الـ16 وlint/typecheck/build؛ اختُبرت نسخة `next start` محليًا بالعربية على الهاتف والإنجليزية على الكمبيوتر مع إعادة التحميل وفتح القائمة والتنقل للمشاريع والعودة، دون أخطاء JavaScript. لا يعني ذلك تأكيد نشر Vercel.
+
 - افهم request الحالي ثم استخدم أصغر مجموعة skills مناسبة من `.agents/skills`.
 - لا تعدّل foundation أو routes أو content contracts لمجرد تنظيف شكلي.
 - حافظ على repository boundary؛ لا تجعل component يستدعي Supabase أو mock مباشرة.
