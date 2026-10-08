@@ -434,6 +434,7 @@ SUPABASE_SERVICE_ROLE_KEY
 ```text
 SESSION_SECRET       # 32+ chars
 ANALYTICS_SALT       # 16+ chars, منفصل عن session secret
+CRON_SECRET          # 16+ chars, مستقل ومخصص لـ Vercel Cron
 ADMIN_EMAIL
 ADMIN_PASSWORD       # 12+ chars
 RESEND_API_KEY       # optional, server-only
@@ -441,7 +442,7 @@ MAIL_FROM            # optional, verified sending email
 CONTACT_NOTIFICATION_EMAIL # optional, defaults to ADMIN_EMAIL
 ```
 
-`SUPABASE_SECRET_KEY` و`SESSION_SECRET` و`ANALYTICS_SALT` و`ADMIN_PASSWORD` server-only. لا يبدأ أي منها بـ`NEXT_PUBLIC_`. ملف `.env.example` هو القالب، و`.env.local` مستبعد من Git.
+`SUPABASE_SECRET_KEY` و`SESSION_SECRET` و`ANALYTICS_SALT` و`CRON_SECRET` و`ADMIN_PASSWORD` server-only. لا يبدأ أي منها بـ`NEXT_PUBLIC_`. ملف `.env.example` هو القالب، و`.env.local` مستبعد من Git.
 
 ## 18. أوامر التشغيل والتحقق
 
@@ -489,6 +490,8 @@ http://localhost:3000/api/cms/health
 ## 20. حالة العمل النشطة
 
 حزمة العمل الحالية تشمل تحسينات الأداء وSEO السابقة، وجهة العمل، نسبة المشاريع، آراء العملاء، ومعاينات المسودات وتقوية الإدارة.
+
+- **Supabase keepalive**: يعرّف `vercel.json` مهمة يومية إلى `GET /api/cron/supabase-keepalive`. المسار Node ديناميكي وغير قابل للتخزين أو الفهرسة، يقبل فقط `Authorization: Bearer $CRON_SECRET` وينفذ قراءة واحدة صغيرة بلا كتابة. يلزم إضافة `CRON_SECRET` في Production على Vercel؛ هذه صيانة للخطة المجانية وليست ضمان SLA. نجحت lint/typecheck/build والاختبارات المعزولة الـ19، ومنها رفض الطلب غير الموقّع وتنفيذ قراءة واحدة للطلب الصحيح.
 
 - **جهة العمل**: `identity.employment` قابل للإخفاء والتعديل باللغتين. القيمة الافتراضية بطلب صاحب الموقع هي عربي سيو و`https://www.arbiseo.com/`. تغيير جهة العمل لا يغيّر مشاريع الماضي.
 - **نسبة المشروع**: `project.attribution` لقطة مستقلة باسم جهة التنفيذ ورابطها ومساهمتك ونص الحقوق. نشر أعمال الفريق يتطلب `permissionConfirmed` ونصوصًا مكتملة. لا تُنسب المشاريع السابقة تلقائيًا للشركة، ولا يعني ذكر اسمها وجود تصريح قانوني.

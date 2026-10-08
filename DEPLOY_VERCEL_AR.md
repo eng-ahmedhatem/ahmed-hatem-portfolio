@@ -29,7 +29,7 @@ git push -u origin master
 2. اختر مستودع GitHub.
 3. اترك Framework Preset على **Next.js** وRoot Directory على `./`.
 4. لا تغيّر Build Command أوOutput Directory.
-5. أضف متغيرات البيئة التالية لكل من Production وPreview:
+5. أضف متغيرات البيئة التالية لكل من Production وPreview، بينما يكفي ضبط `CRON_SECRET` في Production:
 
 ```text
 CONTENT_REPOSITORY=api
@@ -39,6 +39,7 @@ SUPABASE_SECRET_KEY=...
 SUPABASE_STORAGE_BUCKET=portfolio-assets
 SESSION_SECRET=...
 ANALYTICS_SALT=...
+CRON_SECRET=...
 ADMIN_EMAIL=...
 ADMIN_PASSWORD=...
 ```
@@ -52,7 +53,21 @@ NEXT_PUBLIC_SITE_URL=https://your-domain.com
 
 إذا لم يوجد نطاق مخصص بعد، استخدم نطاق الإنتاج الذي تمنحه Vercel ثم أعد النشر بعد إضافة المتغيرين.
 
-## 4. فحص النسخة الحية
+أنشئ `CRON_SECRET` كقيمة عشوائية مستقلة بطول 32 حرفًا أو أكثر. يستخدمها Vercel تلقائيًا لإرسال ترويسة `Authorization` إلى مهمة الصيانة اليومية؛ لا تضعها في رابط ولا في متغير يبدأ بـ `NEXT_PUBLIC_`.
+
+## 4. إبقاء مشروع Supabase المجاني نشطًا
+
+يحتوي `vercel.json` على مهمة إنتاج يومية تستدعي `/api/cron/supabase-keepalive`. المسار محمي بـ`CRON_SECRET` وينفذ قراءة صغيرة فقط من `content_records` دون تعديل بيانات.
+
+بعد أول نشر:
+
+1. افتح **Vercel → Project → Settings → Cron Jobs** وتأكد أن المهمة ظاهرة.
+2. تأكد أن `CRON_SECRET` مضبوط في بيئة Production ثم أعد النشر إن أضفته بعد النشر.
+3. راقب أول تنفيذ من **Logs**؛ النجاح يعيد `200` مع `{ "ok": true }`.
+
+هذه الصيانة تقلل احتمال إيقاف مشروع Free بسبب الخمول، لكنها ليست ضمان توفر مدفوعًا من Supabase. استخدم خطة مدفوعة إذا كان عدم التوقف شرطًا تجاريًا.
+
+## 5. فحص النسخة الحية
 
 - `/` يحوّل إلى `/ar` أو `/en`.
 - `/ar` و`/en` يعملان دون أخطاء.
@@ -61,7 +76,7 @@ NEXT_PUBLIC_SITE_URL=https://your-domain.com
 - رفع صورة أقل من 4MB يعمل ويظهر رابطها من Supabase Storage.
 - `robots.txt` و`sitemap.xml` يستخدمان نطاق الإنتاج الصحيح.
 
-## 5. ربط Google Search Console
+## 6. ربط Google Search Console
 
 1. افتح لوحة إدارة الموقع ثم اختر **SEO والربط**.
 2. في Google Search Console أضف خاصية من نوع **URL-prefix** مستخدمًا نطاق الإنتاج النهائي.
