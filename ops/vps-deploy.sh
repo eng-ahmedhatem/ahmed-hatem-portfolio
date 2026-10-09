@@ -72,18 +72,31 @@ mv -Tf "$base/.next-current" "$base/current"
 
 restart_app() {
   if pm2 describe "$app_name" >/dev/null 2>&1; then
-    pm2 delete "$app_name" >/dev/null
+    pm2 delete "$app_name" >/dev/null || return 1
   fi
-  pm2 start "$base/current/ops/vps-start.sh" --name "$app_name" --interpreter bash >/dev/null
-  pm2 save >/dev/null
+  pm2 start "$base/current/ops/vps-start.sh" --name "$app_name" --interpreter bash >/dev/null || return 1
+  pm2 save >/dev/null || return 1
 }
 
-restart_app
+restore_previous() {
+  if [[ -n "$previous" && -d "$previous" ]]; then
+    ln -s "$previous" "$base/.next-current"
+    mv -Tf "$base/.next-current" "$base/current"
+    restart_app
+  fi
+}
+
+if ! restart_app; then
+  echo "New release could not start; restoring previous release" >&2
+  restore_previous
+  exit 1
+fi
 healthy=0
 for attempt in {1..20}; do
   if curl --silent --show-error --fail --max-time 8 --output /dev/null http://127.0.0.1:3200/ar \
     && curl --silent --show-error --fail --max-time 8 --output /dev/null http://127.0.0.1:3200/en \
-    && curl --silent --show-error --fail --max-time 8 --output /dev/null http://127.0.0.1:3200/robots.txt; then
+    && curl --silent --show-error --fail --max-time 8 --output /dev/null http://127.0.0.1:3200/robots.txt \
+    && { [[ "${CONTENT_REPOSITORY:-}" != api ]] || curl --silent --show-error --fail --max-time 8 http://127.0.0.1:3200/api/cms/health | grep -q '"administration":true'; }; then
     healthy=1
     break
   fi
@@ -92,11 +105,7 @@ done
 
 if [[ "$healthy" != 1 ]]; then
   echo "New release failed smoke checks; restoring previous release" >&2
-  if [[ -n "$previous" && -d "$previous" ]]; then
-    ln -s "$previous" "$base/.next-current"
-    mv -Tf "$base/.next-current" "$base/current"
-    restart_app
-  fi
+  restore_previous
   exit 1
 fi
 
