@@ -1,0 +1,4 @@
+PATH=/home/ahportfolio/.nvm/versions/node/v22.23.3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+@reboot /home/ahportfolio/.nvm/versions/node/v22.23.3/bin/pm2 resurrect >/dev/null 2>&1
+*/5 * * * * /bin/bash /home/ahportfolio/apps/portfolio/deploy.sh >>/home/ahportfolio/apps/portfolio/shared/deploy.log 2>&1
+17 4 * * * /bin/bash /home/ahportfolio/apps/portfolio/current/ops/vps-keepalive.sh >>/home/ahportfolio/apps/portfolio/shared/keepalive.log 2>&1
