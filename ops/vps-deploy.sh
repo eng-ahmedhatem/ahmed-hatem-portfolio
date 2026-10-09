@@ -45,7 +45,7 @@ if [[ ! "$latest_sha" =~ ^[a-f0-9]{40}$ ]]; then
 fi
 
 current_sha=$(cat "$base/current/.git-commit" 2>/dev/null || true)
-if [[ "$current_sha" == "$latest_sha" ]]; then
+if [[ "$current_sha" == "$latest_sha" && "${1:-}" != "--force" ]]; then
   echo "Already deployed: ${latest_sha:0:12}"
   exit 0
 fi
