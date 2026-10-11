@@ -31,7 +31,7 @@
               <tbody>
                 <xsl:for-each select="s:urlset/s:url">
                   <tr>
-                    <td><span class="badge"><xsl:choose><xsl:when test="contains(s:loc, '/en')">EN</xsl:when><xsl:otherwise>AR</xsl:otherwise></xsl:choose></span></td>
+                    <td><span class="badge"><xsl:choose><xsl:when test="starts-with(substring-after(s:loc, 'eng-ahmedhatem.com'), '/en')">EN</xsl:when><xsl:otherwise>AR</xsl:otherwise></xsl:choose></span></td>
                     <td class="url"><a class="decoded-url" href="{s:loc}"><xsl:value-of select="s:loc" /></a></td>
                     <td class="meta hide-mobile"><xsl:choose><xsl:when test="s:lastmod"><xsl:value-of select="substring(s:lastmod,1,10)" /></xsl:when><xsl:otherwise>—</xsl:otherwise></xsl:choose></td>
                     <td class="meta hide-mobile"><xsl:value-of select="s:changefreq" /></td>
