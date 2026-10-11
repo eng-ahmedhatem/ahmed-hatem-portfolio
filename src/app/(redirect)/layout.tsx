@@ -1,18 +1,15 @@
-import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-import { fontVariables } from "@/app/fonts";
+import LocalizedLayout, {
+  generateMetadata as generateLocalizedLayoutMetadata,
+} from "@/app/(site)/[locale]/layout";
 
-import "../globals.css";
+const ARABIC_PARAMS = Promise.resolve({ locale: "ar" });
 
-export const metadata: Metadata = {
-  robots: { index: false, follow: true },
-};
+export function generateMetadata() {
+  return generateLocalizedLayoutMetadata({ params: ARABIC_PARAMS });
+}
 
 export default function RedirectLayout({ children }: { children: ReactNode }) {
-  return (
-    <html lang="en" dir="ltr" className={fontVariables}>
-      <body>{children}</body>
-    </html>
-  );
+  return <LocalizedLayout params={ARABIC_PARAMS}>{children}</LocalizedLayout>;
 }

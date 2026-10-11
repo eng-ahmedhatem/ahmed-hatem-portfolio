@@ -1,15 +1,13 @@
-import { cookies, headers } from "next/headers";
-import { redirect } from "next/navigation";
+import Homepage, {
+  generateMetadata as generateHomepageMetadata,
+} from "@/app/(site)/[locale]/page";
 
-import { getLocaleHomepagePath, LOCALE_COOKIE_NAME } from "@/lib/i18n/config";
-import { resolveRequestLocale } from "@/lib/i18n/request-locale";
+const ARABIC_PARAMS = Promise.resolve({ locale: "ar" });
 
-export default async function LocaleDetectionPage() {
-  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
-  const locale = resolveRequestLocale(
-    cookieStore.get(LOCALE_COOKIE_NAME)?.value,
-    headerStore.get("accept-language"),
-  );
+export function generateMetadata() {
+  return generateHomepageMetadata({ params: ARABIC_PARAMS });
+}
 
-  redirect(getLocaleHomepagePath(locale));
+export default function ArabicHomepage() {
+  return <Homepage params={ARABIC_PARAMS} />;
 }

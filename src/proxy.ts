@@ -23,7 +23,7 @@ export function proxy(request: NextRequest) {
   }
 
   if (request.nextUrl.pathname === "/sitemap") {
-    return NextResponse.rewrite(new URL("/ar/sitemap", request.url));
+    return NextResponse.next();
   }
 
   const locale = resolveRequestLocale(
@@ -33,7 +33,7 @@ export function proxy(request: NextRequest) {
   );
 
   const response = locale === "ar"
-    ? NextResponse.rewrite(new URL("/ar", request.url))
+    ? NextResponse.next()
     : NextResponse.redirect(new URL("/en", request.url));
   response.headers.set("Vary", "Cookie, Accept-Language, CF-IPCountry, X-Vercel-IP-Country, CloudFront-Viewer-Country, X-Country-Code");
   return response;

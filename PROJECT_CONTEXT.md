@@ -181,7 +181,7 @@ public/assets/                   Logo, profile, project and blog media
 3. `Accept-Language` من المتصفح عند غياب country header.
 4. العربية fallback.
 
-العربية تُعرض عند `/` عبر rewrite داخلي، و`/ar` يعيد توجيهًا دائمًا إلى `/`. هذا يجعل canonical و`hreflang="ar"` و`x-default` للصفحة الرئيسية تشير إلى الجذر، بينما تحفظ اللغة الإنجليزية `/en`. تحديد الدولة لا يستخدم geolocation داخل المتصفح ولا خدمة IP خارجية؛ لذلك يجب على الاستضافة تمرير أحد الرؤوس المدعومة (`CF-IPCountry` أو `X-Vercel-IP-Country` أو `CloudFront-Viewer-Country` أو `X-Country-Code`) ليعمل قرار الدولة، وإلا يعمل fallback بلغة المتصفح.
+العربية تُعرض عند `/` كمسار حقيقي يعيد استخدام صفحة وتخطيط العربية، وليس عبر rewrite شبكي؛ و`/ar` يعيد توجيهًا دائمًا إلى `/`. المسار `/sitemap` أيضًا صفحة عربية حقيقية، بينما يبقى `/en/sitemap` للإنجليزية. هذا يمنع تعطل rewrites خلف Nginx الذي ينهي TLS، ويجعل canonical و`hreflang="ar"` و`x-default` للصفحة الرئيسية تشير إلى الجذر، بينما تحفظ اللغة الإنجليزية `/en`. تحديد الدولة لا يستخدم geolocation داخل المتصفح ولا خدمة IP خارجية؛ لذلك يجب على الاستضافة تمرير أحد الرؤوس المدعومة (`CF-IPCountry` أو `X-Vercel-IP-Country` أو `CloudFront-Viewer-Country` أو `X-Country-Code`) ليعمل قرار الدولة، وإلا يعمل fallback بلغة المتصفح.
 
 Language switcher يجب أن يحفظ الاختيار ويحافظ على المسار المقابل المترجم قدر الإمكان. لا تعرض نصًا إنجليزيًا داخل صفحة عربية بصمت. استخدم CSS logical properties، ولا تعتمد على `left/right` في layout جديد إلا لسبب بصري موثق.
 

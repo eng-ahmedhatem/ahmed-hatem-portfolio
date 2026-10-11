@@ -93,8 +93,15 @@ if ! restart_app; then
 fi
 healthy=0
 for attempt in {1..20}; do
-  if curl --silent --show-error --fail --max-time 8 --output /dev/null http://127.0.0.1:3200/ar \
+  if curl --silent --show-error --fail --max-time 8 --output /dev/null \
+      --header 'Host: eng-ahmedhatem.com' \
+      --header 'X-Forwarded-Proto: https' \
+      http://127.0.0.1:3200/ \
     && curl --silent --show-error --fail --max-time 8 --output /dev/null http://127.0.0.1:3200/en \
+    && curl --silent --show-error --fail --max-time 8 --output /dev/null \
+      --header 'Host: eng-ahmedhatem.com' \
+      --header 'X-Forwarded-Proto: https' \
+      http://127.0.0.1:3200/sitemap \
     && curl --silent --show-error --fail --max-time 8 --output /dev/null http://127.0.0.1:3200/robots.txt \
     && { [[ "${CONTENT_REPOSITORY:-}" != api ]] || curl --silent --show-error --fail --max-time 8 http://127.0.0.1:3200/api/cms/health | grep -q '"administration":true'; }; then
     healthy=1
