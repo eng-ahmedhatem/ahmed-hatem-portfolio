@@ -7,6 +7,17 @@ interface LocalePreference {
   order: number;
 }
 
+const ARAB_COUNTRY_CODES = new Set([
+  "AE", "BH", "DJ", "DZ", "EG", "IQ", "JO", "KM", "KW", "LB", "LY",
+  "MA", "MR", "OM", "PS", "QA", "SA", "SD", "SO", "SY", "TN", "YE",
+]);
+
+export function localeFromCountry(countryCode: string | null | undefined): Locale | null {
+  const normalizedCountry = countryCode?.trim().toUpperCase();
+  if (!normalizedCountry || !/^[A-Z]{2}$/.test(normalizedCountry)) return null;
+  return ARAB_COUNTRY_CODES.has(normalizedCountry) ? "ar" : "en";
+}
+
 function supportedLocaleFromLanguageTag(tag: string): Locale | null {
   const primaryLanguage = tag.trim().toLowerCase().split("-")[0];
   return isLocale(primaryLanguage) ? primaryLanguage : null;
@@ -52,10 +63,11 @@ export function localeFromAcceptLanguage(header: string | null): Locale {
 export function resolveRequestLocale(
   savedPreference: string | undefined,
   acceptLanguage: string | null,
+  countryCode?: string | null,
 ): Locale {
   if (isLocale(savedPreference)) {
     return savedPreference;
   }
 
-  return localeFromAcceptLanguage(acceptLanguage);
+  return localeFromCountry(countryCode) ?? localeFromAcceptLanguage(acceptLanguage);
 }

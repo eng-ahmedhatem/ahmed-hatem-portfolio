@@ -222,7 +222,7 @@ export class MockContentRepository implements ContentRepository {
         ...(this.snapshot.homepage.testimonials ?? defaultTestimonials).translations[locale],
       },
       sections,
-      alternatePaths: { ar: "/ar", en: "/en" },
+      alternatePaths: { ar: "/", en: "/en" },
     };
   }
 
@@ -339,8 +339,8 @@ export class MockContentRepository implements ContentRepository {
       {
         id: "route-home",
         kind: "home",
-        paths: { ar: "/ar", en: "/en" },
-        fallbackPaths: { ar: "/ar", en: "/en" },
+        paths: { ar: "/", en: "/en" },
+        fallbackPaths: { ar: "/", en: "/en" },
       },
       {
         id: "route-work",

@@ -34,9 +34,9 @@ export const mockSiteSettings: SiteSettings = {
       brandDescriptor: "مطوّر WordPress ومواقع ويب",
       navigationLabel: "التنقل الرئيسي",
       navigation: [
-        { key: "home", label: "الرئيسية", href: "/ar" },
+        { key: "home", label: "الرئيسية", href: "/" },
         { key: "work", label: "المشاريع", href: "/ar/work" },
-        { key: "about", label: "عني", href: "/ar#about" },
+        { key: "about", label: "عني", href: "/#about" },
         { key: "blog", label: "المدونة", href: "/ar/blog" },
         { key: "contact", label: "تواصل", href: "/ar/contact" },
       ],

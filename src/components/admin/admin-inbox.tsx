@@ -28,13 +28,13 @@ export function AdminInbox({ onUnreadChange }: { onUnreadChange: (count: number)
   function changePage(next: number) { setLoading(true); setPage(next); }
   async function retryNotification(item: Contact) {
     setBusy(item._id); setError("");
-    try { await adminRequest(`/admin/contacts/${item._id}/notify`, { method: "POST" }); setRevision((value) => value + 1); }
+    try { await adminRequest(`/admin/contacts/${item._id}/notify`, { method: "POST" }); setLoading(true); setRevision((value) => value + 1); }
     catch (caught) { setError(caught instanceof Error ? caught.message : "تعذّر إرسال التنبيه."); }
     finally { setBusy(""); }
   }
   async function update(item: Contact, status: Contact["status"]) {
     setBusy(item._id); setError("");
-    try { await adminRequest(`/admin/contacts/${item._id}`, { method: "PATCH", body: JSON.stringify({ status }) }); setRevision((value) => value + 1); }
+    try { await adminRequest(`/admin/contacts/${item._id}`, { method: "PATCH", body: JSON.stringify({ status }) }); setLoading(true); setRevision((value) => value + 1); }
     catch (caught) { setError(caught instanceof Error ? caught.message : "تعذّر تحديث الرسالة."); }
     finally { setBusy(""); }
   }
@@ -46,13 +46,13 @@ export function AdminInbox({ onUnreadChange }: { onUnreadChange: (count: number)
     </div>
     {error ? <p className={styles.noticeError} role="alert">{error}</p> : null}
     {!loading && !error && !data?.items.length ? <p className={styles.emptyState}>لا توجد رسائل ضمن هذا الفلتر.</p> : null}
-    {data?.items.map((item) => <article key={item._id} data-status={item.status}>
+    {!loading && !error ? data?.items.map((item) => <article key={item._id} data-status={item.status}>
       <header><div><span>{{ new: "جديد", read: "تمت القراءة", archived: "مؤرشف" }[item.status]}</span><h2>{item.name}</h2></div><time>{new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></header>
       <div className={styles.messageMeta}><a href={`mailto:${item.email}`}>{item.email}</a>{item.phone ? <a href={`tel:${item.phone}`}>{item.phone}</a> : null}<span>{item.service}</span>{item.budget ? <span>{item.budget}</span> : null}{item.preferredContact ? <span>{item.preferredContact}</span> : null}</div>
       <p style={{ whiteSpace: "pre-wrap" }}>{item.details}</p>
       {item.notificationStatus === "failed" ? <p role="status">حُفظ الطلب؛ تعذّر إرسال تنبيه البريد. <button type="button" disabled={busy === item._id} onClick={() => void retryNotification(item)}>إعادة إرسال التنبيه</button></p> : null}
       <footer>{(["new", "read", "archived"] as const).filter((status) => status !== item.status).map((status) => <button key={status} type="button" disabled={busy === item._id} onClick={() => void update(item, status)}>{{ new: "إعادة للجديد", read: "تمت القراءة", archived: "أرشفة" }[status]}</button>)}</footer>
-    </article>)}
-    {data && data.pages > 1 ? <nav className={styles.inboxToolbar} aria-label="صفحات الرسائل"><button type="button" disabled={loading || page <= 1} onClick={() => changePage(page - 1)}>السابق</button><span>صفحة {page} من {data.pages}</span><button type="button" disabled={loading || page >= data.pages} onClick={() => changePage(page + 1)}>التالي</button></nav> : null}
+    </article>) : null}
+    {!loading && !error && data && data.pages > 1 ? <nav className={styles.inboxToolbar} aria-label="صفحات الرسائل"><button type="button" disabled={page <= 1} onClick={() => changePage(page - 1)}>السابق</button><span>صفحة {page} من {data.pages}</span><button type="button" disabled={page >= data.pages} onClick={() => changePage(page + 1)}>التالي</button></nav> : null}
   </div>;
 }

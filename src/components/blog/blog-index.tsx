@@ -105,7 +105,7 @@ export function BlogIndex({
         <div className={styles.filters}>
           <div className={styles.filterHeading}>
             <span>{archive.labels.categories}</span>
-            <b>{posts.length} {archive.labels.results}</b>
+            <b aria-live="polite">{posts.length} {posts.length === 1 ? archive.labels.resultsSingle : archive.labels.results}</b>
           </div>
           <div className={styles.filterButtons} role="group" aria-label={archive.labels.categories}>
             <button
@@ -166,6 +166,7 @@ export function BlogIndex({
                   height={post.cover.height}
                   alt={post.cover.alt}
                   sizes="(max-width: 767px) 100vw, (max-width: 1320px) 58vw, 760px"
+                  loading={index === 0 ? "eager" : "lazy"}
                 />
                 <span aria-hidden="true">
                   {String((currentPage - 1) * PAGE_SIZE + index + 1).padStart(2, "0")}

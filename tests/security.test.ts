@@ -15,9 +15,10 @@ let limitAllowed = true;
 before(async () => {
   globalThis.fetch = async (input) => {
     const url = String(input);
-    if (url.includes("/rest/v1/content_records")) return Response.json([]);
+    if (url.includes("/rest/v1/content_records")) return Response.json([], { headers: { "content-range": "0-0/1" } });
     if (url.includes("/rest/v1/rpc/portfolio_consume_limit")) return limitAvailable ? Response.json({ allowed: limitAllowed, retryAfter: 37 }) : Response.json({ code: "PGRST202", message: "Test RPC unavailable" }, { status: 404 });
     if (url.includes("/auth/v1/admin/users/")) return Response.json(user);
+    if (url.includes("/auth/v1/admin/users")) return Response.json({ users: [{ ...user, user_metadata: { display_name: "Ahmed Hatem" } }], aud: "authenticated" });
     if (url.includes("/auth/v1/token")) return Response.json({ user, access_token: "test-access", refresh_token: "test-refresh", token_type: "bearer", expires_in: 3600 });
     throw new Error(`Unexpected test network request: ${new URL(url).pathname}`);
   };
@@ -30,6 +31,12 @@ test("admin requests reject absent client header and cross-site origins before D
   assert.equal(absent.status, 403);
   const crossSite = await handleCmsRequest(new Request("http://localhost:3000/api/cms/auth/login", { method: "POST", headers: { "X-Portfolio-Admin": "1", Origin: "https://attacker.invalid", "Sec-Fetch-Site": "cross-site" } }), ["auth", "login"]);
   assert.equal(crossSite.status, 403);
+});
+
+test("health reports a ready backend with an explicit success status", async () => {
+  const response = await handleCmsRequest(new Request("http://localhost:3000/api/cms/health"), ["health"]);
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).administration, true);
 });
 
 test("session requires current admin role, session version, valid signature and MFA", async () => {

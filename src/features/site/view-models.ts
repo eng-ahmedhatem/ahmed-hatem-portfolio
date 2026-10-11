@@ -1,6 +1,8 @@
 import { cache } from "react";
 
 import { contentRepository } from "@/data/content-repository";
+import { withEditorialSeoFallback } from "@/domain/content/editorial-seo";
+import { buildProjectFilters } from "@/features/site/project-filters";
 import type { ContentRepository } from "@/domain/content/repositories";
 import type {
   ContactFormTranslation,
@@ -17,6 +19,7 @@ import type {
   SeoMetadata,
   TranslationState,
 } from "@/domain/content/types";
+import { getLocaleHomepagePath } from "@/lib/i18n/config";
 
 export interface PageIntroViewModel {
   eyebrow: string;
@@ -85,7 +88,13 @@ export interface ContactViewModel {
 }
 
 function pageHref(locale: Locale, page: PageKey): string {
-  return page === "home" ? `/${locale}` : `/${locale}/${page}`;
+  return page === "home" ? getLocaleHomepagePath(locale) : `/${locale}/${page}`;
+}
+
+function normalizePrimaryArabicHref(href: string): string {
+  if (href === "/ar") return "/";
+  if (href.startsWith("/ar#")) return href.slice(3);
+  return href;
 }
 
 function sectionIntro(
@@ -97,16 +106,16 @@ function sectionIntro(
   return section;
 }
 
-function resolvedMedia(media: MediaAsset, locale: Locale): ImageViewModel {
+function resolvedMedia(media: MediaAsset, locale: Locale, fallbackAlt: string): ImageViewModel {
   const translation = media.translations[locale];
   if (!translation) throw new Error(`Missing ${locale} media translation: ${media.id}.`);
-  return { id: media.id, src: media.src, width: media.width, height: media.height, ...translation };
+  return { id: media.id, src: media.src, width: media.width, height: media.height, ...translation, alt: translation.alt.trim() || fallbackAlt };
 }
 
 function projectCover(project: ResolvedProject): ImageViewModel {
   const cover = project.media.find((media) => media.id === project.coverMediaId);
   if (!cover) throw new Error(`Missing cover media for ${project.id}.`);
-  return resolvedMedia(cover, project.locale);
+  return resolvedMedia(cover, project.locale, project.title);
 }
 
 function projectCard(
@@ -126,13 +135,13 @@ function projectCard(
       ? new Intl.DateTimeFormat(project.locale, { year: "numeric", month: "long" }).format(new Date(project.implementationDate))
       : undefined,
     cover: displayMedia
-      ? resolvedMedia(displayMedia, project.locale)
+      ? resolvedMedia(displayMedia, project.locale, project.title)
       : projectCover(project),
   };
 }
 
 function postCover(post: ResolvedBlogPost): ImageViewModel {
-  return resolvedMedia(post.featuredImage, post.locale);
+  return resolvedMedia(post.featuredImage, post.locale, post.title);
 }
 
 function categoryMap(categories: readonly ResolvedBlogCategory[]) {
@@ -144,7 +153,10 @@ export const getSiteChromeViewModel = cache(async (locale: Locale): Promise<Site
     contentRepository.getSiteSettings(locale),
     contentRepository.getRouteManifest(),
   ]);
-  return { settings, routes: routes.map(({ paths, fallbackPaths }) => ({ paths, fallbackPaths })) };
+  const normalizedSettings = locale === "ar"
+    ? { ...settings, navigation: settings.navigation.map((item) => ({ ...item, href: normalizePrimaryArabicHref(item.href) })) }
+    : settings;
+  return { settings: normalizedSettings, routes: routes.map(({ paths, fallbackPaths }) => ({ paths, fallbackPaths })) };
 });
 
 export const getHomepageViewModel = cache(async (locale: Locale) => {
@@ -212,7 +224,7 @@ export const getWorkArchiveViewModel = cache(async (locale: Locale) => {
   ]);
   const projectCards = projects.map((project) => projectCard(project));
   const items = projectCards;
-  const filters = Array.from(new Map(items.map((item) => [item.filterKey, item.filterLabel])), ([key, label]) => ({ key, label }));
+  const filters = buildProjectFilters(items, locale);
   return {
     locale,
     intro: page satisfies PageIntroViewModel,
@@ -224,6 +236,7 @@ export const getWorkArchiveViewModel = cache(async (locale: Locale) => {
       empty: locale === "ar" ? "لا توجد مشاريع ضمن هذا التصنيف." : "No projects match this filter.",
       open: locale === "ar" ? "استكشف المشروع" : "Explore project",
       results: locale === "ar" ? "مشروع" : "projects",
+      resultsSingle: locale === "ar" ? "مشروع" : "project",
       pagination: locale === "ar" ? "التنقل بين صفحات المشاريع" : "Project pagination",
       previous: locale === "ar" ? "السابق" : "Previous",
       next: locale === "ar" ? "التالي" : "Next",
@@ -248,7 +261,7 @@ export const getProjectViewModel = cache(async (locale: Locale, slug: string, re
       eyebrow: project.projectType,
       title: project.title,
       summary: project.excerpt,
-      seo: project.seo,
+      seo: withEditorialSeoFallback(project.seo, "project", locale, project.title, project.excerpt),
       alternatePaths: project.alternatePaths,
     } satisfies PageIntroViewModel,
     project: {
@@ -265,7 +278,9 @@ export const getProjectViewModel = cache(async (locale: Locale, slug: string, re
       dateLabel,
       technologies: project.technologies,
       cover: projectCover(project),
-      gallery: project.media.map((media) => resolvedMedia(media, locale)),
+      gallery: project.media
+        .filter((media) => media.id !== project.coverMediaId)
+        .map((media, index) => resolvedMedia(media, locale, locale === "ar" ? `لقطة ${index + 1} من مشروع ${project.title}` : `Screenshot ${index + 1} of ${project.title}`)),
       liveLink: project.links[0],
     },
     navigation: {
@@ -315,6 +330,7 @@ export const getBlogArchiveViewModel = cache(async (locale: Locale) => {
           latest: "أحدث المقالات",
           read: "اقرأ المقال",
           empty: "لا توجد مقالات مطابقة.",
+          resultsSingle: "مقال",
           results: "مقال",
           pagination: "التنقل بين صفحات المقالات",
           previous: "السابق",
@@ -330,6 +346,7 @@ export const getBlogArchiveViewModel = cache(async (locale: Locale) => {
           latest: "Latest articles",
           read: "Read article",
           empty: "No articles match your search.",
+          resultsSingle: "article",
           results: "articles",
           pagination: "Article pagination",
           previous: "Previous",
@@ -355,7 +372,7 @@ export const getPostViewModel = cache(async (locale: Locale, slug: string, repos
       eyebrow: post.categoryIds.map((id) => categoriesById.get(id)?.name).filter(Boolean).join(" · "),
       title: post.title,
       summary: post.excerpt,
-      seo: post.seo,
+      seo: withEditorialSeoFallback(post.seo, "post", locale, post.title, post.excerpt),
       alternatePaths: post.alternatePaths,
     } satisfies PageIntroViewModel,
     dateLabel: post.publishedAt ? new Intl.DateTimeFormat(locale, { year: "numeric", month: "long", day: "numeric" }).format(new Date(post.publishedAt)) : "",
@@ -385,7 +402,7 @@ export const getCategoryViewModel = cache(async (locale: Locale, slug: string) =
       eyebrow: locale === "ar" ? "تصنيف" : "Category",
       title: category.name,
       summary: category.description,
-      seo: category.seo,
+      seo: withEditorialSeoFallback(category.seo, "category", locale, category.name, category.description),
       alternatePaths: category.alternatePaths,
     } satisfies PageIntroViewModel,
     posts: archive.posts.filter((post) => post.categoryIds.includes(category.id)),

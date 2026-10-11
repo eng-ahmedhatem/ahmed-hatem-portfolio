@@ -104,7 +104,7 @@ export function ProjectGallery({ images, labels }: { images: readonly ImageViewM
             onMouseDown={(event) => { if (event.target === event.currentTarget) close(); }}
           >
             <div className={styles.lightboxBar}>
-              <p className={styles.counter} aria-live="polite"><span>{labels.imageCounter}</span><b>{String(active + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</b></p>
+              <p className={styles.counter} aria-live="polite"><span>{labels.imageCounter}</span><b dir="ltr">{String(active + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</b></p>
               <button ref={closeRef} className={styles.close} type="button" aria-label={labels.close} onClick={close}><LightboxIcon kind="close" /></button>
             </div>
             <div className={styles.stage} onMouseDown={(event) => { if (event.target === event.currentTarget) close(); }}>

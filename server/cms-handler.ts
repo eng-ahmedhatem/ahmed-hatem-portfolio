@@ -214,7 +214,9 @@ export async function handleCmsRequest(request: Request, path: readonly string[]
 
   if (method === "GET" && route === "health") {
     const database = await ensureDatabase();
-    return json({ ok: true, provider: "supabase", database, administration: database && hasAuthConfiguration() });
+    const configured = hasAuthConfiguration();
+    const administration = database && configured;
+    return json({ ok: administration, provider: "supabase", database, configured, administration }, administration ? 200 : 503);
   }
 
   if (method === "GET" && route === "public/snapshot") {

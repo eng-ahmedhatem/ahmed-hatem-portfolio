@@ -15,7 +15,7 @@ type ProjectView = NonNullable<AwaitedReturn<typeof getProjectViewModel>>;
 
 export function ProjectDetail({ view }: { view: ProjectView }) {
   const { project, labels } = view;
-  const gallery = project.gallery.filter((image) => image.id !== project.cover.id);
+  const gallery = project.gallery;
   const story = [
     project.overview ? { id: "overview", number: "01", title: labels.overview, body: project.overview } : null,
     project.challenge ? { id: "challenge", number: "02", title: labels.challenge, body: project.challenge } : null,

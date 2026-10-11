@@ -1,4 +1,4 @@
-.section { padding-block: var(--section-space-sm); border-block-start: 1px solid var(--border); overflow: clip; }
+.section { padding-block: var(--section-space-sm); border-block-start: 1px solid var(--border); overflow: clip; scroll-margin-block-start: 5rem; }
 .layout { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.5fr); gap: clamp(2rem, 5vw, 5rem); align-items: center; }
 .intro { padding-block-start: 1rem; }
 .eyebrow { display: block; font-size: .9375rem; color: var(--accent-strong); margin-block-end: 1.2rem; }

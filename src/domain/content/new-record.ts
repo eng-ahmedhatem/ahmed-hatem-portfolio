@@ -1,4 +1,5 @@
 import type { BlogCategory, BlogPost, Project, Testimonial } from "./types";
+import { NEW_RECORD_SUMMARIES, NEW_RECORD_TITLES } from "./editorial-seo";
 
 export function createContentRecord(kind: "project" | "post" | "category" | "testimonial", id: string, now = new Date().toISOString()) {
   if (kind === "testimonial") {
@@ -7,8 +8,8 @@ export function createContentRecord(kind: "project" | "post" | "category" | "tes
   }
   const media = { id: `${id}-cover`, src: "", width: 1600, height: 1000, translations: { ar: { alt: "", caption: "" }, en: { alt: "", caption: "" } } };
   const translations = Object.fromEntries((["ar", "en"] as const).map((locale) => {
-    const title = locale === "ar" ? { project: "مشروع جديد", post: "مقال جديد", category: "تصنيف جديد" }[kind] : { project: "New project", post: "New article", category: "New category" }[kind];
-    const summary = locale === "ar" ? "أضف وصفًا واضحًا قبل النشر." : "Add a clear description before publishing.";
+    const title = NEW_RECORD_TITLES[locale][kind];
+    const summary = NEW_RECORD_SUMMARIES[locale];
     const shared = { slug: `${id}-${locale}`, seo: { title, description: summary, robots: { index: true, follow: true }, openGraph: { title, description: summary } } };
     return [locale, kind === "category" ? { ...shared, name: title, description: summary } : kind === "post" ? { ...shared, title, excerpt: summary, content: [] } : { ...shared, title, excerpt: summary, role: "", overview: "", challenge: "", solution: "", projectType: locale === "ar" ? "موقع ويب" : "Website", filterLabel: locale === "ar" ? "مواقع ويب" : "Websites" }];
   }));

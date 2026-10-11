@@ -3,11 +3,13 @@ import type { Metadata } from "next";
 import { ContactRequest } from "@/components/contact/contact-request";
 import { AboutPreview } from "@/components/home/about-preview";
 import { Hero } from "@/components/home/hero";
+import { HomeAnchorRestorer } from "@/components/home/home-anchor-restorer";
 import { LatestProjects } from "@/components/home/latest-projects";
 import { Testimonials } from "@/components/home/testimonials";
 import { StructuredData } from "@/components/ui/structured-data";
 import { getHomepageViewModel } from "@/features/site/view-models";
 import { localeFromParam } from "@/lib/i18n/locale-param";
+import { getLocaleHomepagePath } from "@/lib/i18n/config";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 import { createHomepageStructuredData } from "@/lib/seo/structured-data";
 
@@ -22,9 +24,10 @@ export async function generateMetadata({ params }: HomepageProps): Promise<Metad
 export default async function Homepage({ params }: HomepageProps) {
   const locale = localeFromParam((await params).locale);
   const { about, contact, hero, intro, projects, testimonials } = await getHomepageViewModel(locale);
-  const path = intro.alternatePaths[locale] ?? `/${locale}`;
+  const path = intro.alternatePaths[locale] ?? getLocaleHomepagePath(locale);
   return (
     <main id="main-content">
+      <HomeAnchorRestorer />
       <StructuredData data={createHomepageStructuredData(locale, intro.seo, path)} />
       <Hero hero={hero} />
       <LatestProjects projects={projects} />

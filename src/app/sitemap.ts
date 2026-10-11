@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     languages["x-default"] = absoluteUrl(
-      route.paths.en ?? route.paths.ar ?? "/en",
+      route.paths.ar ?? route.paths.en ?? "/",
     );
 
     return Object.values(route.paths).flatMap((path) => {

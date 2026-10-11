@@ -24,6 +24,7 @@ export const phaseOneContactAdapter: ContactSubmissionAdapter = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submission),
+        signal: AbortSignal.timeout(15_000),
       });
       return { delivered: response.ok };
     } catch {

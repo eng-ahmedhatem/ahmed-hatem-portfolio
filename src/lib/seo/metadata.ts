@@ -5,7 +5,7 @@ import type {
   SeoMetadata,
   TranslationState,
 } from "@/domain/content/types";
-import { getOpenGraphLocale } from "@/lib/i18n/config";
+import { getLocaleHomepagePath, getOpenGraphLocale } from "@/lib/i18n/config";
 import { absoluteUrl, getSiteUrl } from "@/lib/seo/site";
 
 interface LocalizedMetadataInput {
@@ -19,7 +19,7 @@ export function createLocalizedMetadata({
   seo,
   alternatePaths,
 }: LocalizedMetadataInput): Metadata {
-  const activePath = alternatePaths[locale] ?? `/${locale}`;
+  const activePath = alternatePaths[locale] ?? getLocaleHomepagePath(locale);
   const canonical = seo.canonicalUrl
     ? absoluteUrl(seo.canonicalUrl)
     : absoluteUrl(activePath);
@@ -34,7 +34,7 @@ export function createLocalizedMetadata({
   }
 
   languageAlternates["x-default"] = absoluteUrl(
-    alternatePaths.en ?? alternatePaths.ar ?? activePath,
+    alternatePaths.ar ?? alternatePaths.en ?? activePath,
   );
 
   const fallbackImage = {

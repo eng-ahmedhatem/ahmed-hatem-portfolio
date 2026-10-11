@@ -127,7 +127,8 @@ export function AdminSeoSettings({
               <button type="button" onClick={onSave} disabled={saving || !dirty}>
                 {saving ? "جارٍ الحفظ…" : dirty ? "حفظ ونشر وسم التحقق" : "الإعدادات محفوظة"}
               </button>
-              <a href="/sitemap.xml" target="_blank" rel="noreferrer">معاينة Sitemap</a>
+              <a href="/sitemap" target="_blank" rel="noreferrer">عرض خريطة الموقع</a>
+              <a href="/sitemap.xml" target="_blank" rel="noreferrer">ملف XML</a>
               <a href="/robots.txt" target="_blank" rel="noreferrer">معاينة Robots</a>
             </div>
           </div>

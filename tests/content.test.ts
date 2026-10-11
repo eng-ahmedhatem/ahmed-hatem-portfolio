@@ -72,7 +72,7 @@ test("bilingual metadata keeps self canonical and alternate URLs", () => {
     const seo = getBundledSnapshot().homepage.translations[locale]!.seo;
     const metadata = createLocalizedMetadata({ locale, seo: { ...seo, canonicalUrl: undefined }, alternatePaths: paths });
     assert.equal(metadata.alternates?.canonical, `https://portfolio.example${paths[locale]}`);
-    assert.equal(metadata.alternates?.languages?.["x-default"], "https://portfolio.example/en/work/example");
+    assert.equal(metadata.alternates?.languages?.["x-default"], "https://portfolio.example/ar/work/example");
   }
 });
 

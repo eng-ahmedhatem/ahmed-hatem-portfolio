@@ -14,17 +14,22 @@ import styles from "./work-archive.module.css";
 
 const PROJECTS_PER_PAGE = 4;
 
+function filterKeys(filter: { key: string; keys?: readonly string[] }) {
+  return filter.keys?.length ? filter.keys : [filter.key];
+}
+
 interface WorkArchiveProps {
   archive: {
     locale: Locale;
     items: readonly ProjectCardViewModel[];
-    filters: readonly { key: string; label: string }[];
+    filters: readonly { key: string; label: string; keys: readonly string[] }[];
     labels: {
       all: string;
       filterLabel: string;
       empty: string;
       open: string;
       results: string;
+      resultsSingle: string;
       pagination: string;
       previous: string;
       next: string;
@@ -41,11 +46,9 @@ export function WorkArchive({
   initialFilter = "all",
   initialPage = 1,
 }: WorkArchiveProps) {
-  const validInitialFilter = archive.filters.some(
-    (filter) => filter.key === initialFilter,
-  )
-    ? initialFilter
-    : "all";
+  const validInitialFilter = archive.filters.find(
+    (filter) => filterKeys(filter).includes(initialFilter),
+  )?.key ?? "all";
   const [active, setActive] = useState(validInitialFilter);
   const [page, setPage] = useState(Math.max(1, initialPage));
   const reduce = Boolean(useReducedMotion());
@@ -58,17 +61,18 @@ export function WorkArchive({
       new Map(
         archive.filters.map((filter) => [
           filter.key,
-          archive.items.filter((item) => item.filterKey === filter.key).length,
+          archive.items.filter((item) => filterKeys(filter).includes(item.filterKey)).length,
         ]),
       ),
     [archive.filters, archive.items],
   );
+  const selectedFilter = archive.filters.find((filter) => filter.key === active);
   const filteredItems = useMemo(
     () =>
       active === "all"
         ? archive.items
-        : archive.items.filter((item) => item.filterKey === active),
-    [active, archive.items],
+        : archive.items.filter((item) => selectedFilter ? filterKeys(selectedFilter).includes(item.filterKey) : false),
+    [active, archive.items, selectedFilter],
   );
   const totalPages = Math.max(
     1,
@@ -136,7 +140,7 @@ export function WorkArchive({
         </div>
         <p className={styles.resultCount} aria-live="polite">
           <strong>{number.format(filteredItems.length)}</strong>
-          <span>{archive.labels.results}</span>
+          <span>{filteredItems.length === 1 ? archive.labels.resultsSingle : archive.labels.results}</span>
         </p>
       </div>
 

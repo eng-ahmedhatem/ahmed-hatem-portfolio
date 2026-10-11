@@ -13,6 +13,7 @@ import type {
   LocaleSwitchRoute,
   NavigationItem,
 } from "@/domain/content/types";
+import { getLocaleHomepagePath } from "@/lib/i18n/config";
 
 import { LanguageSwitcher } from "./language-switcher";
 import { ThemeSwitcher } from "./theme-switcher";
@@ -61,7 +62,7 @@ function getAriaCurrent(
     return "page";
   }
 
-  if (destination !== `/${locale}` && currentPath.startsWith(`${destination}/`)) {
+  if (destination !== getLocaleHomepagePath(locale) && currentPath.startsWith(`${destination}/`)) {
     return "location";
   }
 
@@ -102,6 +103,7 @@ export function SiteHeaderClient({
   routes,
 }: SiteHeaderClientProps) {
   const pathname = usePathname();
+  const homepageHref = getLocaleHomepagePath(locale);
   const shouldReduceMotion = useReducedMotion();
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -246,7 +248,7 @@ export function SiteHeaderClient({
       >
         <span className={styles.stickyLine} aria-hidden="true" />
         <Container className={styles.inner}>
-          <Link className={styles.brand} href={`/${locale}`}>
+          <Link className={styles.brand} href={homepageHref}>
             {logoSrc && logoWidth && logoHeight ? (
               <Image
                 className={styles.brandLogo}

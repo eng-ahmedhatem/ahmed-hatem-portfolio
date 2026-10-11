@@ -22,6 +22,9 @@ function revalidateContentRoutes(kind: string | undefined, record?: SavedRecord)
   revalidateTag(CONTENT_SNAPSHOT_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
   revalidatePath("/sitemap.xml");
+  revalidatePath("/sitemap");
+  revalidatePath("/ar/sitemap");
+  revalidatePath("/en/sitemap");
 
   for (const locale of ["ar", "en"] as const) {
     revalidatePath(`/${locale}`);

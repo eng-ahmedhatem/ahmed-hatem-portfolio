@@ -43,16 +43,16 @@ export function AdminLogin() {
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mfaRequired, setMfaRequired] = useState(false);
-  const [configurationReady, setConfigurationReady] = useState<boolean | null>(null);
+  const [systemState, setSystemState] = useState<"loading" | "ready" | "setup" | "unavailable">("loading");
 
   useEffect(() => {
     let mounted = true;
-    fetch("/api/cms/health")
+    fetch("/api/cms/health", { cache: "no-store", signal: AbortSignal.timeout(12_000) })
       .then((response) => response.json())
-      .then((health: { database?: boolean; administration?: boolean }) => {
-        if (mounted) setConfigurationReady(Boolean(health.database && health.administration));
+      .then((health: { configured?: boolean; administration?: boolean }) => {
+        if (mounted) setSystemState(health.administration ? "ready" : health.configured === false ? "setup" : "unavailable");
       })
-      .catch(() => { if (mounted) setConfigurationReady(false); });
+      .catch(() => { if (mounted) setSystemState("unavailable"); });
     return () => { mounted = false; };
   }, []);
 
@@ -84,11 +84,12 @@ export function AdminLogin() {
     finally { setPending(false); }
   }
 
-  const status = configurationReady === null
-    ? "جارٍ فحص الاتصال"
-    : configurationReady
-      ? "النظام جاهز"
-      : "يلزم إكمال الإعداد";
+  const status = {
+    loading: "جارٍ فحص الاتصال",
+    ready: "النظام جاهز",
+    setup: "يلزم إكمال الإعداد",
+    unavailable: "تعذّر الاتصال بالخدمة",
+  }[systemState];
 
   return (
     <main className={styles.loginPage}>
@@ -134,11 +135,11 @@ export function AdminLogin() {
           aria-labelledby="admin-login-title"
         >
           <div className={styles.loginPanelTop}>
-            <div className={styles.loginSystemState} data-state={configurationReady === null ? "loading" : configurationReady ? "ready" : "warning"} role="status">
+            <div className={styles.loginSystemState} data-state={systemState === "setup" || systemState === "unavailable" ? "warning" : systemState} role="status">
               <i aria-hidden="true" />
               <span>{status}</span>
             </div>
-            <Link href="/ar">العودة للموقع <b aria-hidden="true">↗</b></Link>
+            <Link href="/">العودة للموقع <b aria-hidden="true">↗</b></Link>
           </div>
 
           <div className={styles.mobileLoginBrand} aria-hidden="true">
@@ -151,12 +152,12 @@ export function AdminLogin() {
             <span>أدخل بياناتك للوصول إلى لوحة التحكم الآمنة.</span>
           </div>
 
-          {configurationReady === false ? (
-            <p className={styles.setupWarning} role="status">يلزم تفعيل Supabase وإضافة مفاتيح المشروع وبيانات المدير في ملف البيئة قبل أول تسجيل دخول.</p>
+          {systemState === "setup" || systemState === "unavailable" ? (
+            <p className={styles.setupWarning} role="status">{systemState === "setup" ? "يلزم إكمال إعداد Supabase وبيانات المدير قبل أول تسجيل دخول." : "قاعدة البيانات غير متاحة حاليًا. يمكنك محاولة الدخول مجددًا بعد عودة اتصال Supabase."}</p>
           ) : null}
 
           {mfaRequired ? <form onSubmit={verifyMfa} className={styles.loginForm}>
-            <label className={styles.loginField}>رمز تطبيق المصادقة<input name="code" autoFocus inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} dir="ltr" required /></label>
+            <label className={styles.loginField}>رمز تطبيق المصادقة<input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} dir="ltr" spellCheck={false} required /></label>
             <button className={styles.loginSubmit} type="submit" disabled={pending}>{pending ? "جارٍ التحقق…" : "تأكيد الدخول"}</button>
             <button type="button" onClick={() => { setMfaRequired(false); setError(""); }}>العودة لبيانات الدخول</button>
             <p className={styles.formError} role="alert">{error}</p>
@@ -165,7 +166,7 @@ export function AdminLogin() {
               <label htmlFor="admin-email">البريد الإلكتروني</label>
               <div className={styles.loginInputFrame}>
                 <MailIcon />
-                <input id="admin-email" name="email" type="email" inputMode="email" autoComplete="username" placeholder="name@example.com" dir="ltr" required />
+                <input id="admin-email" name="email" type="email" inputMode="email" autoComplete="username" placeholder="name@example.com" dir="ltr" spellCheck={false} required />
               </div>
             </div>
 

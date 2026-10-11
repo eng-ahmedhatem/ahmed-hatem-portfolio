@@ -3,14 +3,16 @@ import type {
   ResolvedSiteSettings,
   SeoMetadata,
 } from "@/domain/content/types";
+import { getLocaleHomepagePath } from "@/lib/i18n/config";
 import { absoluteUrl } from "@/lib/seo/site";
 
 export function createWebsiteStructuredData(settings: ResolvedSiteSettings) {
+  const homepagePath = getLocaleHomepagePath(settings.locale);
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "@id": `${absoluteUrl(`/${settings.locale}`)}#website`,
-    url: absoluteUrl(`/${settings.locale}`),
+    "@id": `${absoluteUrl(homepagePath)}#website`,
+    url: absoluteUrl(homepagePath),
     name: settings.brandName,
     description: settings.seo.description,
     inLanguage: settings.locale,
@@ -88,7 +90,7 @@ export function createBlogPostingStructuredData(
     author: {
       "@type": "Person",
       name: locale === "ar" ? "أحمد حاتم" : "Ahmed Hatem",
-      url: absoluteUrl(`/${locale}`),
+      url: absoluteUrl(getLocaleHomepagePath(locale)),
     },
   };
 }
