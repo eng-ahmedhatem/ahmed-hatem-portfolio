@@ -10,18 +10,7 @@ function requestCountry(request: NextRequest): string | null {
     ?? request.headers.get("x-country-code");
 }
 
-function isHumanSitemapNavigation(request: NextRequest): boolean {
-  return request.headers.get("sec-fetch-mode") === "navigate"
-    && request.headers.get("accept")?.includes("text/html") === true;
-}
-
 export function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname === "/sitemap.xml") {
-    return isHumanSitemapNavigation(request)
-      ? NextResponse.redirect(new URL("/sitemap", request.url))
-      : NextResponse.next();
-  }
-
   if (request.nextUrl.pathname === "/sitemap") {
     return NextResponse.next();
   }
@@ -40,5 +29,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/sitemap", "/sitemap.xml"],
+  matcher: ["/", "/sitemap"],
 };
