@@ -18,7 +18,7 @@ import type {
   StaticPage,
   TranslationState,
 } from "@/domain/content/types";
-import { getDirection } from "@/lib/i18n/config";
+import { getDirection, getLocalizedPath } from "@/lib/i18n/config";
 import { withEmploymentDefaults } from "../defaults/employment";
 import { isPublicPost, isPublicProject, isPublicTestimonial } from "../../domain/content/publication";
 import { defaultTestimonials } from "../defaults/testimonials";
@@ -77,7 +77,7 @@ function projectPaths(project: Project): TranslationState<string> {
   return Object.fromEntries(
     Object.entries(project.translations).map(([locale, translation]) => [
       locale,
-      `/${locale}/work/${translation.slug}`,
+      getLocalizedPath(locale as Locale, `/work/${translation.slug}`),
     ]),
   );
 }
@@ -86,7 +86,7 @@ function postPaths(post: BlogPost): TranslationState<string> {
   return Object.fromEntries(
     Object.entries(post.translations).map(([locale, translation]) => [
       locale,
-      `/${locale}/blog/${translation.slug}`,
+      getLocalizedPath(locale as Locale, `/blog/${translation.slug}`),
     ]),
   );
 }
@@ -95,7 +95,7 @@ function categoryPaths(category: BlogCategory): TranslationState<string> {
   return Object.fromEntries(
     Object.entries(category.translations).map(([locale, translation]) => [
       locale,
-      `/${locale}/blog/category/${translation.slug}`,
+      getLocalizedPath(locale as Locale, `/blog/category/${translation.slug}`),
     ]),
   );
 }
@@ -328,8 +328,8 @@ export class MockContentRepository implements ContentRepository {
       locale,
       updatedAt: page.updatedAt,
       alternatePaths: {
-        ar: `/ar/${key}`,
-        en: `/en/${key}`,
+        ar: getLocalizedPath("ar", `/${key}`),
+        en: getLocalizedPath("en", `/${key}`),
       },
     };
   }
@@ -345,20 +345,20 @@ export class MockContentRepository implements ContentRepository {
       {
         id: "route-work",
         kind: "work-archive",
-        paths: { ar: "/ar/work", en: "/en/work" },
-        fallbackPaths: { ar: "/ar/work", en: "/en/work" },
+        paths: { ar: "/work", en: "/en/work" },
+        fallbackPaths: { ar: "/work", en: "/en/work" },
       },
       {
         id: "route-blog",
         kind: "blog-archive",
-        paths: { ar: "/ar/blog", en: "/en/blog" },
-        fallbackPaths: { ar: "/ar/blog", en: "/en/blog" },
+        paths: { ar: "/blog", en: "/en/blog" },
+        fallbackPaths: { ar: "/blog", en: "/en/blog" },
       },
       {
         id: "route-contact",
         kind: "contact",
-        paths: { ar: "/ar/contact", en: "/en/contact" },
-        fallbackPaths: { ar: "/ar/contact", en: "/en/contact" },
+        paths: { ar: "/contact", en: "/en/contact" },
+        fallbackPaths: { ar: "/contact", en: "/en/contact" },
       },
     ];
 
@@ -368,7 +368,7 @@ export class MockContentRepository implements ContentRepository {
         id: `route-${project.id}`,
         kind: "project",
         paths: projectPaths(project),
-        fallbackPaths: { ar: "/ar/work", en: "/en/work" },
+        fallbackPaths: { ar: "/work", en: "/en/work" },
         lastModified: project.updatedAt,
       }));
 
@@ -378,7 +378,7 @@ export class MockContentRepository implements ContentRepository {
         id: `route-${post.id}`,
         kind: "post",
         paths: postPaths(post),
-        fallbackPaths: { ar: "/ar/blog", en: "/en/blog" },
+        fallbackPaths: { ar: "/blog", en: "/en/blog" },
         lastModified: post.updatedAt,
       }));
 
@@ -386,7 +386,7 @@ export class MockContentRepository implements ContentRepository {
       id: `route-${category.id}`,
       kind: "category",
       paths: categoryPaths(category),
-      fallbackPaths: { ar: "/ar/blog", en: "/en/blog" },
+      fallbackPaths: { ar: "/blog", en: "/en/blog" },
       lastModified: category.updatedAt,
     }));
 

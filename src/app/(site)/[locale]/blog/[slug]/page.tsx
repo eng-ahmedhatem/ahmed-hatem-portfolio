@@ -7,6 +7,7 @@ import { contentRepository } from "@/data/content-repository";
 import { SUPPORTED_LOCALES } from "@/domain/content/types";
 import { getPostViewModel } from "@/features/site/view-models";
 import { localeFromParam } from "@/lib/i18n/locale-param";
+import { getLocalizedPath } from "@/lib/i18n/config";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 import { createBlogPostingStructuredData } from "@/lib/seo/structured-data";
 
@@ -57,7 +58,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   const path =
-    post.intro.alternatePaths[locale] ?? `/${locale}/blog/${routeParams.slug}`;
+    post.intro.alternatePaths[locale] ?? getLocalizedPath(locale, `/blog/${routeParams.slug}`);
 
   return (
     <>

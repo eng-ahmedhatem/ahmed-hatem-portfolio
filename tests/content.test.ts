@@ -67,12 +67,20 @@ test("testimonials require permission and both translations; public list is orde
 });
 
 test("bilingual metadata keeps self canonical and alternate URLs", () => {
-  const paths = { ar: "/ar/work/example", en: "/en/work/example" };
+  const paths = { ar: "/work/example", en: "/en/work/example" };
   for (const locale of ["ar", "en"] as const) {
     const seo = getBundledSnapshot().homepage.translations[locale]!.seo;
     const metadata = createLocalizedMetadata({ locale, seo: { ...seo, canonicalUrl: undefined }, alternatePaths: paths });
     assert.equal(metadata.alternates?.canonical, `https://portfolio.example${paths[locale]}`);
-    assert.equal(metadata.alternates?.languages?.["x-default"], "https://portfolio.example/ar/work/example");
+    assert.equal(metadata.alternates?.languages?.["x-default"], "https://portfolio.example/work/example");
+  }
+});
+
+test("Arabic public routes omit the locale prefix while English routes keep it", async () => {
+  const routes = await new MockContentRepository().getRouteManifest();
+  for (const route of routes) {
+    if (route.paths.ar) assert.equal(route.paths.ar === "/" || !route.paths.ar.startsWith("/ar/"), true);
+    if (route.paths.en) assert.equal(route.paths.en === "/en" || route.paths.en.startsWith("/en/"), true);
   }
 });
 

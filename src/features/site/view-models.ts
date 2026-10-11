@@ -19,7 +19,7 @@ import type {
   SeoMetadata,
   TranslationState,
 } from "@/domain/content/types";
-import { getLocaleHomepagePath } from "@/lib/i18n/config";
+import { getLocaleHomepagePath, getLocalizedPath } from "@/lib/i18n/config";
 
 export interface PageIntroViewModel {
   eyebrow: string;
@@ -88,12 +88,13 @@ export interface ContactViewModel {
 }
 
 function pageHref(locale: Locale, page: PageKey): string {
-  return page === "home" ? getLocaleHomepagePath(locale) : `/${locale}/${page}`;
+  return page === "home" ? getLocaleHomepagePath(locale) : getLocalizedPath(locale, `/${page}`);
 }
 
 function normalizePrimaryArabicHref(href: string): string {
   if (href === "/ar") return "/";
   if (href.startsWith("/ar#")) return href.slice(3);
+  if (href.startsWith("/ar/")) return href.slice(3);
   return href;
 }
 
@@ -124,7 +125,7 @@ function projectCard(
 ): ProjectCardViewModel {
   return {
     id: project.id,
-    href: `/${project.locale}/work/${project.slug}`,
+    href: getLocalizedPath(project.locale, `/work/${project.slug}`),
     title: project.title,
     excerpt: project.excerpt,
     projectType: project.projectType,
@@ -197,7 +198,7 @@ export const getHomepageViewModel = cache(async (locale: Locale) => {
       intro: sectionIntro(homepage.sections, "featured-projects"),
       ...homepage.projects,
       items: homepageProjectCards,
-      viewAllHref: `/${locale}/work`,
+      viewAllHref: getLocalizedPath(locale, "/work"),
     },
     about: {
       locale,
@@ -284,8 +285,8 @@ export const getProjectViewModel = cache(async (locale: Locale, slug: string, re
       liveLink: project.links[0],
     },
     navigation: {
-      previous: previous && previous.id !== project.id ? { href: `/${locale}/work/${previous.slug}`, title: previous.title } : undefined,
-      next: next && next.id !== project.id ? { href: `/${locale}/work/${next.slug}`, title: next.title } : undefined,
+      previous: previous && previous.id !== project.id ? { href: getLocalizedPath(locale, `/work/${previous.slug}`), title: previous.title } : undefined,
+      next: next && next.id !== project.id ? { href: getLocalizedPath(locale, `/work/${next.slug}`), title: next.title } : undefined,
     },
     labels: locale === "ar" ? {
       date: "تاريخ التنفيذ", role: "الدور", type: "نوع المشروع", technologies: "التقنيات", overview: "عن المشروع", challenge: "التحدي", solution: "الحل", gallery: "معرض المشروع", caseStudy: "دراسة حالة", story: "قصة المشروع", visualArchive: "السجل البصري", openImage: "افتح الصورة", close: "إغلاق", previousImage: "الصورة السابقة", nextImage: "الصورة التالية", imageCounter: "صورة", projectNavigation: "التنقل بين المشاريع", previousProject: "المشروع السابق", nextProject: "المشروع التالي", live: "زيارة الموقع",
@@ -305,10 +306,10 @@ export const getBlogArchiveViewModel = cache(async (locale: Locale) => {
   return {
     locale,
     intro: page satisfies PageIntroViewModel,
-    categories: categories.map((category) => ({ id: category.id, name: category.name, href: `/${locale}/blog/category/${category.slug}` })),
+    categories: categories.map((category) => ({ id: category.id, name: category.name, href: getLocalizedPath(locale, `/blog/category/${category.slug}`) })),
     posts: posts.map((post) => ({
       id: post.id,
-      href: `/${locale}/blog/${post.slug}`,
+      href: getLocalizedPath(locale, `/blog/${post.slug}`),
       title: post.title,
       excerpt: post.excerpt,
       featured: Boolean(post.featured),
@@ -317,7 +318,7 @@ export const getBlogArchiveViewModel = cache(async (locale: Locale) => {
       cover: postCover(post),
       categories: post.categoryIds.flatMap((id) => {
         const category = categoriesById.get(id);
-        return category ? [{ id, name: category.name, href: `/${locale}/blog/category/${category.slug}` }] : [];
+        return category ? [{ id, name: category.name, href: getLocalizedPath(locale, `/blog/category/${category.slug}`) }] : [];
       }),
       dateLabel: post.publishedAt ? new Intl.DateTimeFormat(locale, { year: "numeric", month: "long", day: "numeric" }).format(new Date(post.publishedAt)) : "",
     })),
@@ -383,9 +384,9 @@ export const getPostViewModel = cache(async (locale: Locale, slug: string, repos
     toc: post.content.flatMap((block) => block.type === "heading" ? [{ id: block.id, text: block.text, level: block.level }] : []),
     categories: post.categoryIds.flatMap((id) => {
       const category = categoriesById.get(id);
-      return category ? [{ name: category.name, href: `/${locale}/blog/category/${category.slug}` }] : [];
+      return category ? [{ name: category.name, href: getLocalizedPath(locale, `/blog/category/${category.slug}`) }] : [];
     }),
-    related: related.map((item) => ({ title: item.title, excerpt: item.excerpt, href: `/${locale}/blog/${item.slug}` })),
+    related: related.map((item) => ({ title: item.title, excerpt: item.excerpt, href: getLocalizedPath(locale, `/blog/${item.slug}`) })),
     labels: locale === "ar"
       ? { article: "مقال", published: "تاريخ النشر", contents: "في هذا المقال", related: "مقالات ذات صلة", read: "اقرأ المقال" }
       : { article: "Article", published: "Published", contents: "In this article", related: "Related articles", read: "Read article" },

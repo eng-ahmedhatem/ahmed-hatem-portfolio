@@ -7,6 +7,7 @@ import { contentRepository } from "@/data/content-repository";
 import { SUPPORTED_LOCALES } from "@/domain/content/types";
 import { getCategoryViewModel } from "@/features/site/view-models";
 import { localeFromParam } from "@/lib/i18n/locale-param";
+import { getLocalizedPath } from "@/lib/i18n/config";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 import { createWebPageStructuredData } from "@/lib/seo/structured-data";
 
@@ -64,7 +65,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   const path =
     category.intro.alternatePaths[locale] ??
-    `/${locale}/blog/category/${routeParams.slug}`;
+    getLocalizedPath(locale, `/blog/category/${routeParams.slug}`);
 
   return (
     <PageShell

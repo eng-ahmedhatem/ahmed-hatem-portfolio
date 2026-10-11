@@ -35,10 +35,10 @@ export const mockSiteSettings: SiteSettings = {
       navigationLabel: "التنقل الرئيسي",
       navigation: [
         { key: "home", label: "الرئيسية", href: "/" },
-        { key: "work", label: "المشاريع", href: "/ar/work" },
+        { key: "work", label: "المشاريع", href: "/work" },
         { key: "about", label: "عني", href: "/#about" },
-        { key: "blog", label: "المدونة", href: "/ar/blog" },
-        { key: "contact", label: "تواصل", href: "/ar/contact" },
+        { key: "blog", label: "المدونة", href: "/blog" },
+        { key: "contact", label: "تواصل", href: "/contact" },
       ],
       skipToContentLabel: "انتقل إلى المحتوى",
       languageSwitcherLabel: "اختيار اللغة",

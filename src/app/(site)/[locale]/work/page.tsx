@@ -4,6 +4,7 @@ import { PageShell } from "@/components/ui/page-shell";
 import { WorkArchive } from "@/components/work/work-archive";
 import { getWorkArchiveViewModel } from "@/features/site/view-models";
 import { localeFromParam } from "@/lib/i18n/locale-param";
+import { getLocalizedPath } from "@/lib/i18n/config";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 import { createWebPageStructuredData } from "@/lib/seo/structured-data";
 
@@ -24,6 +25,6 @@ export default async function Page({ params, searchParams }: Props) {
   const query = await searchParams;
   const requestedPage =
     typeof query.page === "string" ? Number.parseInt(query.page, 10) : 1;
-  const path = archive.intro.alternatePaths[locale] ?? `/${locale}/work`;
+  const path = archive.intro.alternatePaths[locale] ?? getLocalizedPath(locale, "/work");
   return <PageShell intro={archive.intro} structuredData={createWebPageStructuredData(locale, archive.intro.seo, path)}><WorkArchive archive={archive} initialFilter={typeof query.filter === "string" ? query.filter : "all"} initialPage={Number.isFinite(requestedPage) ? requestedPage : 1} /></PageShell>;
 }

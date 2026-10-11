@@ -77,12 +77,13 @@ function recordStatus(record: AdminContentRecord) {
 function recordPreviewHref(record: AdminContentRecord, locale: "ar" | "en") {
   if (["project", "post"].includes(record.kind)) return `/preview/${locale}/${record.kind}/${encodeURIComponent(record.entityId)}`;
   if (record.kind === "homepage" || record.kind === "site-settings") return locale === "ar" ? "/" : "/en";
-  if (record.kind === "static-page") return `/${locale}/${asString(record.payload.key)}`;
+  const prefix = locale === "ar" ? "" : "/en";
+  if (record.kind === "static-page") return `${prefix}/${asString(record.payload.key)}`;
   const slug = nestedString(record.payload, ["translations", locale, "slug"]);
   if (!slug) return null;
-  if (record.kind === "project") return `/${locale}/work/${encodeURIComponent(slug)}`;
-  if (record.kind === "post") return `/${locale}/blog/${encodeURIComponent(slug)}`;
-  if (record.kind === "category") return `/${locale}/blog/category/${encodeURIComponent(slug)}`;
+  if (record.kind === "project") return `${prefix}/work/${encodeURIComponent(slug)}`;
+  if (record.kind === "post") return `${prefix}/blog/${encodeURIComponent(slug)}`;
+  if (record.kind === "category") return `${prefix}/blog/category/${encodeURIComponent(slug)}`;
   return null;
 }
 

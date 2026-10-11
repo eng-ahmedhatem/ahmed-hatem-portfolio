@@ -4,6 +4,7 @@ import { after } from "next/server";
 import { notifyContact } from "@server/mail";
 
 import { CONTENT_SNAPSHOT_CACHE_TAG } from "@/data/content-cache";
+import { getLocalizedPath } from "@/lib/i18n/config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,20 +24,19 @@ function revalidateContentRoutes(kind: string | undefined, record?: SavedRecord)
   revalidatePath("/", "layout");
   revalidatePath("/sitemap.xml");
   revalidatePath("/sitemap");
-  revalidatePath("/ar/sitemap");
   revalidatePath("/en/sitemap");
 
   for (const locale of ["ar", "en"] as const) {
-    revalidatePath(`/${locale}`);
-    if (kind === "project") revalidatePath(`/${locale}/work`);
-    if (kind === "post" || kind === "category") revalidatePath(`/${locale}/blog`);
+    revalidatePath(getLocalizedPath(locale, "/"));
+    if (kind === "project") revalidatePath(getLocalizedPath(locale, "/work"));
+    if (kind === "post" || kind === "category") revalidatePath(getLocalizedPath(locale, "/blog"));
 
     const slug = record?.payload?.translations?.[locale]?.slug;
-    if (kind === "project" && slug) revalidatePath(`/${locale}/work/${slug}`);
-    if (kind === "post" && slug) revalidatePath(`/${locale}/blog/${slug}`);
-    if (kind === "category" && slug) revalidatePath(`/${locale}/blog/category/${slug}`);
+    if (kind === "project" && slug) revalidatePath(getLocalizedPath(locale, `/work/${slug}`));
+    if (kind === "post" && slug) revalidatePath(getLocalizedPath(locale, `/blog/${slug}`));
+    if (kind === "category" && slug) revalidatePath(getLocalizedPath(locale, `/blog/category/${slug}`));
     if (kind === "static-page" && record?.payload?.key) {
-      revalidatePath(`/${locale}/${record.payload.key}`);
+      revalidatePath(getLocalizedPath(locale, `/${record.payload.key}`));
     }
   }
 }

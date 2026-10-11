@@ -91,7 +91,7 @@ test("analytics excludes private paths and strips URL tracking/PII", () => {
   assert.equal(analyticsLocation("/preview/ar/project/private", "ar"), null);
   assert.equal(analyticsLocation("/en/../../admin", "en"), null);
   assert.equal(analyticsLocation("/en/blog", "ar"), null);
-  assert.deepEqual(analyticsLocation("/ar/work?email=private#secret", "ar", "https://search.example/query?token=private"), { path: "/ar/work", referrer: "https://search.example" });
+  assert.deepEqual(analyticsLocation("/work?email=private#secret", "ar", "https://search.example/query?token=private"), { path: "/work", referrer: "https://search.example" });
 });
 
 test("banned administrators cannot use existing sessions", () => {

@@ -4,6 +4,7 @@ import { BlogIndex } from "@/components/blog/blog-index";
 import { PageShell } from "@/components/ui/page-shell";
 import { getBlogArchiveViewModel } from "@/features/site/view-models";
 import { localeFromParam } from "@/lib/i18n/locale-param";
+import { getLocalizedPath } from "@/lib/i18n/config";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 import { createWebPageStructuredData } from "@/lib/seo/structured-data";
 
@@ -33,7 +34,7 @@ export default async function BlogArchive({ params, searchParams }: BlogArchiveP
   const query = await searchParams;
   const archive = await getBlogArchiveViewModel(locale);
   const { intro } = archive;
-  const path = intro.alternatePaths[locale] ?? `/${locale}/blog`;
+  const path = intro.alternatePaths[locale] ?? getLocalizedPath(locale, "/blog");
 
   return (
     <PageShell

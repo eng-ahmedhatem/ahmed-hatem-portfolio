@@ -24,6 +24,11 @@ export function getLocaleHomepagePath(locale: Locale): string {
   return locale === "ar" ? "/" : "/en";
 }
 
+export function getLocalizedPath(locale: Locale, path: string): string {
+  const normalizedPath = path === "/" ? "" : path.startsWith("/") ? path : `/${path}`;
+  return locale === "ar" ? normalizedPath || "/" : `/en${normalizedPath}`;
+}
+
 export function getLocaleSitemapPath(locale: Locale): string {
   return locale === "ar" ? "/sitemap" : "/en/sitemap";
 }

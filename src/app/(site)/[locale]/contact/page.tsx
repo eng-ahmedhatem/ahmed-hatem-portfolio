@@ -4,6 +4,7 @@ import { ContactRequest } from "@/components/contact/contact-request";
 import { StructuredData } from "@/components/ui/structured-data";
 import { getContactPageViewModel } from "@/features/site/view-models";
 import { localeFromParam } from "@/lib/i18n/locale-param";
+import { getLocalizedPath } from "@/lib/i18n/config";
 import { createLocalizedMetadata } from "@/lib/seo/metadata";
 import { createWebPageStructuredData } from "@/lib/seo/structured-data";
 
@@ -26,7 +27,7 @@ export async function generateMetadata({
 export default async function ContactPage({ params }: ContactPageProps) {
   const locale = localeFromParam((await params).locale);
   const { intro, contact } = await getContactPageViewModel(locale);
-  const path = intro.alternatePaths[locale] ?? `/${locale}/contact`;
+  const path = intro.alternatePaths[locale] ?? getLocalizedPath(locale, "/contact");
 
   return (
     <main id="main-content">

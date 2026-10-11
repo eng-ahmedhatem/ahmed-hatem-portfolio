@@ -160,18 +160,18 @@ public/assets/                   Logo, profile, project and blog media
 - `ar`: `dir="rtl"`، محتوى عربي حقيقي.
 - `en`: `dir="ltr"`، محتوى إنجليزي حقيقي.
 
-الصفحة العربية الرئيسية تملك المسار الأساسي `/`، والصفحة الإنجليزية `/en`. بقية المسارات العامة تبقى مسبوقة باللغة:
+العربية هي اللغة الأساسية وتملك المسارات النظيفة دون بادئة، بينما تبقى الإنجليزية تحت `/en`:
 
 ```text
 /
 /en
-/[locale]/work
-/[locale]/work/[slug]
-/[locale]/blog
-/[locale]/blog/[slug]
-/[locale]/blog/category/[slug]
-/[locale]/contact
-/[locale]/about        (تحويل مقصود إلى قسم عني في الصفحة الرئيسية)
+/work و`/en/work`
+/work/[slug] و`/en/work/[slug]`
+/blog و`/en/blog`
+/blog/[slug] و`/en/blog/[slug]`
+/blog/category/[slug] و`/en/blog/category/[slug]`
+/contact و`/en/contact`
+/about و`/en/about`        (تحويل مقصود إلى قسم عني في الصفحة الرئيسية)
 ```
 
 `src/proxy.ts` يحدد لغة الجذر بهذا الترتيب:
@@ -181,7 +181,7 @@ public/assets/                   Logo, profile, project and blog media
 3. `Accept-Language` من المتصفح عند غياب country header.
 4. العربية fallback.
 
-العربية تُعرض عند `/` كمسار حقيقي يعيد استخدام صفحة وتخطيط العربية، وليس عبر rewrite شبكي؛ و`/ar` يعيد توجيهًا دائمًا إلى `/`. المسار `/sitemap` أيضًا صفحة عربية حقيقية، بينما يبقى `/en/sitemap` للإنجليزية. أما `/sitemap.xml` فيرجع XML مباشرة وبصورة ثابتة لكل العملاء ومحركات البحث ولا يعتمد على ترويسات المتصفح؛ الصفحة البشرية المنسقة منفصلة عنه. هذا يمنع تعطل rewrites خلف Nginx الذي ينهي TLS، ويجعل canonical و`hreflang="ar"` و`x-default` للصفحة الرئيسية تشير إلى الجذر، بينما تحفظ اللغة الإنجليزية `/en`. تحديد الدولة لا يستخدم geolocation داخل المتصفح ولا خدمة IP خارجية؛ لذلك يجب على الاستضافة تمرير أحد الرؤوس المدعومة (`CF-IPCountry` أو `X-Vercel-IP-Country` أو `CloudFront-Viewer-Country` أو `X-Country-Code`) ليعمل قرار الدولة، وإلا يعمل fallback بلغة المتصفح.
+العربية تُعرض عند `/` ومساراتها الداخلية مثل `/work` و`/blog` كمسارات حقيقية تعيد استخدام صفحات وتخطيط العربية، وليست rewrites شبكية؛ وكل مسار قديم تحت `/ar/*` يعيد توجيهًا دائمًا إلى المسار العربي النظيف المقابل. المسار `/sitemap` صفحة عربية بشرية، بينما يبقى `/en/sitemap` للإنجليزية. أما `/sitemap.xml` فيرجع XML مباشرة وبصورة ثابتة لكل العملاء ومحركات البحث مع XSL مرئي لتحسين عرضه في المتصفح فقط؛ لا يضيف XSL أي عناصر غير قياسية إلى بيانات Google. هذا يجعل canonical و`hreflang="ar"` و`x-default` تشير إلى المسارات العربية النظيفة، بينما تحفظ اللغة الإنجليزية `/en`. تحديد الدولة لا يستخدم geolocation داخل المتصفح ولا خدمة IP خارجية؛ لذلك يجب على الاستضافة تمرير أحد الرؤوس المدعومة (`CF-IPCountry` أو `X-Vercel-IP-Country` أو `CloudFront-Viewer-Country` أو `X-Country-Code`) ليعمل قرار الدولة، وإلا يعمل fallback بلغة المتصفح.
 
 Language switcher يجب أن يحفظ الاختيار ويحافظ على المسار المقابل المترجم قدر الإمكان. لا تعرض نصًا إنجليزيًا داخل صفحة عربية بصمت. استخدم CSS logical properties، ولا تعتمد على `left/right` في layout جديد إلا لسبب بصري موثق.
 

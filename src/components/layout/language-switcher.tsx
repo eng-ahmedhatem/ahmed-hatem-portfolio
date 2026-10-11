@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { Locale, LocaleSwitchRoute } from "@/domain/content/types";
 import {
   getLocaleHomepagePath,
+  getLocalizedPath,
   getLocaleSitemapPath,
   LOCALE_COOKIE_MAX_AGE,
   LOCALE_COOKIE_NAME,
@@ -72,7 +73,8 @@ function preserveLocation(
   ) return `${href}${hash}`;
   if (
     ["work", "blog"].some((section) =>
-      pathname === `/${currentLocale}/${section}` && href === `/${targetLocale}/${section}`,
+      pathname === getLocalizedPath(currentLocale, `/${section}`)
+      && href === getLocalizedPath(targetLocale, `/${section}`),
     )
   ) return `${href}${search}`;
   return href;
